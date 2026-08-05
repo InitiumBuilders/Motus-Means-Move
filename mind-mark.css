@@ -1,0 +1,131 @@
+/* ════════════════════════════════════════════════════════════════════
+   THE MOTUSMIND — the canonical mark.
+
+   Almost nothing animates here. The cadence ACCELERATES across seven
+   passes and no declarative animation can speed up, so the motion lives in
+   one rAF and every position is a function of the clock. This file's job is
+   what things ARE: weight, colour, and the one-shot entrance a node plays
+   when it joins the mind.
+
+   THREE COLOURS, and the difference is the meaning:
+     MINT   the mind, the loop, and the words it sends — TRUST, MANTRA,
+            MIND, MODEL, MOVE.
+     WHITE  $M, what the heart answers with. It sits INSIDE the heart and
+            has to be read against a solid mint fill, which is exactly the
+            one place a mint-on-mint or cyan-on-mint glyph disappears.
+     CYAN   $TRUST, struck once from the whole collapsed network.
+   ════════════════════════════════════════════════════════════════════ */
+
+.mm-mount{ display:flex; flex-direction:column; align-items:center; gap:16px; text-align:center; }
+.mm{ width:min(320px,94vw); height:auto; overflow:visible; display:block; --mm-cyan:#4fdcff; }
+
+/* ── LEFT · the person ── */
+.mm-figure{
+  fill:none; stroke:var(--trust,#5ff3c0); stroke-width:2.6;
+  stroke-linecap:round; stroke-linejoin:round;
+}
+.mm-halo{ opacity:.5; }
+
+/* ── THE MIND · four lobes, bridged ──
+   NO ANIMATION HERE. A hundred nodes and edges once carried a hundred CSS
+   keyframe animations — a live timeline each, on somebody's phone — and any
+   element whose animation failed to advance sat frozen on its first frame,
+   which for a fade-in is invisible forever. Both problems have one answer:
+   the arrival rides the rAF that was already running, and an element that
+   has finished arriving is dropped and never touched again. */
+.mm-node{ fill:var(--trust,#5ff3c0); }
+.mm-edge{ stroke:var(--trust,#5ff3c0); stroke-width:.95; fill:none; stroke-dasharray:1; }
+/* what the whole network becomes for an instant before the word */
+.mm-core{ fill:var(--trust,#5ff3c0); opacity:0; filter:drop-shadow(0 0 12px rgba(95,243,192,.95)); }
+.mm-wave{ fill:none; stroke:var(--trust,#5ff3c0); stroke-width:1.2; opacity:0; }
+
+/* ── RIGHT · the heart, and what it holds ── */
+.mm-heart{
+  fill:var(--trust,#5ff3c0); stroke:none; opacity:.94;
+  filter:drop-shadow(0 0 8px rgba(95,243,192,.34));
+}
+
+/* ── THE LOOP · arrows that GROW ── */
+.mm-link{
+  fill:none; stroke:var(--trust,#5ff3c0); stroke-width:2.6;
+  stroke-linecap:round; opacity:0;
+  stroke-dasharray:100 100; stroke-dashoffset:100;
+  filter:drop-shadow(0 0 4px rgba(95,243,192,.4));
+}
+.mm-tip{ fill:var(--trust,#5ff3c0); opacity:0; filter:drop-shadow(0 0 4px rgba(95,243,192,.5)); }
+.mm-pol{
+  fill:var(--trust,#5ff3c0); opacity:.42; font-size:15px; font-weight:800;
+  font-family:'Sora',system-ui,-apple-system,'Segoe UI',sans-serif; text-anchor:middle;
+}
+
+/* ── what travels ──
+   Sized against the HEAD, never past it. A six-letter word set larger than
+   the person carrying it reads as a banner laid over the drawing rather than
+   something the drawing produced. */
+.mm-word text{
+  fill:var(--trust,#5ff3c0); font-size:10.5px; font-weight:800; letter-spacing:.055em;
+  font-family:'Sora',system-ui,-apple-system,'Segoe UI',sans-serif;
+  filter:drop-shadow(0 0 7px rgba(95,243,192,.85));
+}
+.mm-word--coin text{ font-size:18px; letter-spacing:0; }
+
+/* WHITE — legible on a solid mint heart, which mint and cyan are not */
+.mm-mint text{
+  fill:#ffffff; font-size:11.5px; font-weight:800; letter-spacing:.04em;
+  font-family:'Sora',system-ui,-apple-system,'Segoe UI',sans-serif;
+  filter:drop-shadow(0 0 6px rgba(255,255,255,.75));
+}
+/* CYAN — struck once, from everything the mind built */
+.mm-forge text{
+  fill:var(--mm-cyan); font-size:12px; font-weight:800; letter-spacing:.05em;
+  font-family:'Sora',system-ui,-apple-system,'Segoe UI',sans-serif;
+  filter:drop-shadow(0 0 11px rgba(79,220,255,.95));
+}
+.mm-forge--coin text{ fill:var(--trust,#5ff3c0); font-size:18px; letter-spacing:0;
+  filter:drop-shadow(0 0 7px rgba(95,243,192,.85)); }
+.mm-motus text{
+  fill:var(--trust,#5ff3c0); font-size:15px; font-weight:800; letter-spacing:.11em;
+  font-family:'Sora',system-ui,-apple-system,'Segoe UI',sans-serif;
+  filter:drop-shadow(0 0 14px rgba(95,243,192,.9));
+}
+.mm-word,.mm-mint,.mm-forge,.mm-motus{ opacity:0; }
+
+.mm-creed{
+  margin:0; max-width:min(36ch,100%);
+  font-size:.9rem; line-height:1.55; font-weight:600;
+  color:var(--ink,#eaf6ff);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   MOTUS, OUT IN THE PAGE
+   The word leaves the drawing to walk the user's own navigation, so it
+   cannot be an SVG node — it is one fixed div moved by transform alone,
+   which is the cheapest thing a browser can animate.
+   ════════════════════════════════════════════════════════════════════ */
+.mm-fly{
+  position:fixed; left:0; top:0; z-index:60; pointer-events:none;
+  width:68px; height:26px; line-height:26px; text-align:center;
+  font:800 14px/26px 'Sora',system-ui,-apple-system,'Segoe UI',sans-serif;
+  letter-spacing:.1em; color:var(--trust,#5ff3c0);
+  will-change:transform,opacity; opacity:0;
+  text-shadow:0 0 12px rgba(95,243,192,.9),
+              0 0 calc(14px + var(--mm-glow,0) * 30px) rgba(95,243,192,calc(.35 + var(--mm-glow,0) * .55));
+}
+
+/* the dock only ever has its LABEL touched — never its layout, never a
+   pseudo-element it might already be using for something of its own */
+.dock__btn .dock__lbl{
+  transition:transform .22s cubic-bezier(.2,1.5,.4,1), color .22s ease, text-shadow .22s ease;
+}
+.dock__btn.mm-lit .dock__lbl{
+  transform:scale(1.17);
+  color:var(--trust,#5ff3c0);
+  text-shadow:0 0 10px rgba(95,243,192,.85), 0 0 24px rgba(95,243,192,.45);
+}
+
+/* ── stillness, honoured ── */
+@media (prefers-reduced-motion:reduce){
+  .mm-link{ opacity:.34; stroke-dashoffset:14 }
+  .mm-tip{ opacity:.6 }
+  .dock__btn .dock__lbl{ transition:none }
+}
