@@ -571,15 +571,39 @@
   var art = prosp.querySelector('.pr-art');
   var artImg = art && art.querySelector('img');
 
-  /* the art is object-fit:contain — the light must gather on the
-     PAINTED box, not on the element that holds it */
+  /* The light must gather on the PAINTED pixels, not on the element
+     that holds them. The old version assumed a centred object-fit
+     letterbox — true on some viewports, false on others, and on a wide
+     desktop the image's box was twice its painted height, which put
+     the whole ceremony half an artwork BELOW the logo. This computes
+     the painted box the way the browser does: from the element's own
+     computed object-fit and object-position. No assumptions left. */
   function paintedRect(box, img) {
-    var ar = (img.naturalWidth && img.naturalHeight)
-      ? img.naturalWidth / img.naturalHeight : 1.6;
-    var w = Math.min(box.width, box.height * ar);
-    var h = w / ar;
-    var l = box.left + (box.width - w) / 2;
-    var t = box.top + (box.height - h) / 2;
+    var nw = img.naturalWidth, nh = img.naturalHeight;
+    if (!nw || !nh || !box.width || !box.height) return null;
+    var cs = getComputedStyle(img);
+    var fit = cs.objectFit || 'fill', w, h, s;
+    if (fit === 'contain' || fit === 'scale-down') {
+      s = Math.min(box.width / nw, box.height / nh);
+      if (fit === 'scale-down') s = Math.min(1, s);
+      w = nw * s; h = nh * s;
+    } else if (fit === 'cover') {
+      s = Math.max(box.width / nw, box.height / nh);
+      w = nw * s; h = nh * s;
+    } else if (fit === 'none') { w = nw; h = nh; }
+    else { w = box.width; h = box.height; }
+    var pos = (cs.objectPosition || '50% 50%').split(/\s+/);
+    function along(p, extent, span) {
+      p = (p || '50%').trim();
+      if (p.slice(-1) === '%')  return (span - extent) * parseFloat(p) / 100;
+      if (/px$/.test(p))        return parseFloat(p);
+      if (p === 'left' || p === 'top')    return 0;
+      if (p === 'right' || p === 'bottom') return span - extent;
+      return (span - extent) / 2;
+    }
+    var ox = along(pos[0], w, box.width);
+    var oy = along(pos[1] || '50%', h, box.height);
+    var l = box.left + ox, t = box.top + oy;
     return { left: l, top: t, width: w, height: h, right: l + w, bottom: t + h };
   }
 
@@ -680,6 +704,7 @@
     var ib = artImg.getBoundingClientRect();
     if (!ib.width || !ib.height) return null;
     var r = paintedRect(ib, artImg);
+    if (!r) return null;
     return { x: r.left + r.width * 0.21, y: r.top + r.height * 0.60, art: r };
   }
 
@@ -880,7 +905,8 @@
     if (artImg && artImg.complete && artImg.naturalWidth) return startCeremony();
     if (artImg) artImg.addEventListener('load', function () { later(startCeremony, 220); }, { once: true });
     later(startCeremony, 4200);         // and never wait on it forever
-  }, FAST ? 200 : 2200);
+  }, FAST ? 200 : 3400);                // after the condense settles — its scale(1.1)
+                                        // would inflate every measurement by 5%
   later(beginTyping, 24000);            // whatever happens, the words arrive
 
   /* ══ ACT II — August writes the plain truth ═══════════════════════ */
