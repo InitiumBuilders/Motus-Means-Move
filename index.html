@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="mind-mark.css?v=1785921629" rel="stylesheet">
+<link href="mind-mark.css?v=1785922889" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════════════════
    THE MOTUS VISION · SET THE STAGE · Emergence Glass II
@@ -1186,6 +1186,9 @@ body[data-lv]{transition:background .8s ease}
    buried and dim, then pushes itself forward out of the plate and into
    the room. Scale and opacity only — the compositor carries all of it. */
 #twOrb.emerge{z-index:99999}
+/* she does not fade up from nothing at a half-known place — the birth
+   keyframes own her opacity from the first frame, on the mark */
+#twOrb.emerge{opacity:1!important;transition:none!important}
 #twOrb.emerge .two-core{animation:orbBirth 3.4s cubic-bezier(.16,.86,.2,1) both}
 #twOrb.emerge .two-label,#twOrb.orbiting .two-label{opacity:0;transition:opacity .5s ease}
 /* circling, she is a light on a path — the nameplate would swing the
@@ -3820,6 +3823,9 @@ body.rail-open{overflow:hidden}
    sizing. The stage covers the art exactly; all insets are set, so
    grid alignment has no say in where it goes. */
 #orbStage{position:absolute;inset:0;pointer-events:none;display:block}
+/* the artwork holds still while she comes out of it — a breathing
+   picture is a moving target, and she was chasing it */
+.pr-art.pr-still img{animation-play-state:paused!important}
 #orbStage #twOrb{position:absolute}
 .pr-art #twOrb .two-core img{width:100%!important;height:100%!important;
   max-width:none!important;max-height:none!important}
@@ -5361,7 +5367,7 @@ html.lite .evHalo{animation:none}
   document.getElementById('orgClose').addEventListener('click', closeOrg);
 })();
 </script>
-<script src="mind-mark.js?v=1785921629" defer></script>
+<script src="mind-mark.js?v=1785922889" defer></script>
 <script>
 (function(){
   'use strict';
@@ -5476,10 +5482,10 @@ html.lite .evHalo{animation:none}
   document.addEventListener('DOMContentLoaded',all);
   all();
 })();</script>
-<script src="sound.js?v=1785921629"></script>
-<script src="spark.js?v=1785921629"></script>
-<script src="prospect.js?v=1785921629" defer></script>
-<script src="finale.js?v=1785921629"></script>
+<script src="sound.js?v=1785922889"></script>
+<script src="spark.js?v=1785922889"></script>
+<script src="prospect.js?v=1785922889" defer></script>
+<script src="finale.js?v=1785922889"></script>
 
 <script id="scoreWire">(function(){
   var S = window.MotusSound; if(!S) return;

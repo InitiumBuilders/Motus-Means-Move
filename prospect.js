@@ -237,6 +237,7 @@
     try { if (window.MotusSound && MotusSound.stop) MotusSound.stop(); } catch (e) {}
 
     /* PRONTO belongs to the intro. It does not follow you into the deck. */
+    try { art.classList.remove('pr-still'); } catch (e) {}
     try { returnOrb(); } catch (e) {}
     try { pronto.remove(); } catch (e) {}
     ['twOrb', 'prosp', 'reword', 'prontoWave', 'prontoRing', 'prontoEdge']
@@ -708,14 +709,29 @@
       'translate3d(' + oX.toFixed(1) + 'px,' + oY.toFixed(1) + 'px,0)');
     onRail = true;
   }
-  /* the mark, in .pr-art's own layout space — pure offsets */
+  /* THE MARK, WHERE THE EYE SEES IT.
+     Layout offsets were the wrong ruler: the artwork carries a
+     perpetual breathing animation (prArtBreathe, and prCondense before
+     it), so the PAINTED picture is continuously scaled away from its
+     laid-out box. The orb sat at the layout position while the logo
+     drifted — she appeared beside the picture, then snapped onto it as
+     the two converged. That is the flash-then-teleport.
+     Measured rects include the transform. Subtracting the stage's own
+     rect converts them into the stage's local space, so the mark is
+     wherever the logo is being DRAWN, this frame, always. */
   function localMark() {
     if (!artImg || !artImg.naturalWidth) return null;
-    return { x: artImg.offsetLeft + artImg.offsetWidth * 0.21,
-             y: artImg.offsetTop + artImg.offsetHeight * 0.60,
-             w: artImg.offsetWidth, h: artImg.offsetHeight,
-             cx: artImg.offsetLeft + artImg.offsetWidth / 2,
-             cy: artImg.offsetTop + artImg.offsetHeight / 2 };
+    var stage = art.querySelector('#orbStage');
+    if (!stage) return null;
+    var sb = stage.getBoundingClientRect();
+    var ib = artImg.getBoundingClientRect();
+    if (!ib.width || !ib.height) return null;
+    var lx = ib.left - sb.left, ly = ib.top - sb.top;
+    return { x: lx + ib.width * 0.21,
+             y: ly + ib.height * 0.60,
+             w: ib.width, h: ib.height,
+             cx: lx + ib.width / 2,
+             cy: ly + ib.height / 2 };
   }
   function placeLocal(x, y) {
     if (CORE_DX === null) measureCore();
@@ -765,8 +781,9 @@
     orb.style.transition = 'none';            // land on the mark without gliding to it
     CORE_DX = null;                           // the label just changed — remeasure
     adoptOrb();
+    art.classList.add('pr-still');   // the picture holds its breath for her
     var lm = localMark();
-    if (!lm) { returnOrb(); return done && done(); }
+    if (!lm) { art.classList.remove('pr-still'); returnOrb(); return done && done(); }
     placeLocal(lm.x, lm.y);
     orb.offsetWidth;
     orb.style.transition = '';
@@ -926,6 +943,7 @@
         ORB_CEREMONY = false;
         orb.classList.remove('orbiting');
         var vb2 = artImg.getBoundingClientRect();
+        art.classList.remove('pr-still');         // and it breathes again
         returnOrb();                              // home to the body, on the rail
         var s2 = SPARK();
         if (s2) { try { s2.surge({ x: vb2.left + vb2.width / 2,
