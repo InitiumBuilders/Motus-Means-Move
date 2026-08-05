@@ -237,6 +237,7 @@
     try { if (window.MotusSound && MotusSound.stop) MotusSound.stop(); } catch (e) {}
 
     /* PRONTO belongs to the intro. It does not follow you into the deck. */
+    try { returnOrb(); } catch (e) {}
     try { pronto.remove(); } catch (e) {}
     ['twOrb', 'prosp', 'reword', 'prontoWave', 'prontoRing', 'prontoEdge']
       .forEach(function (id) { var el = document.getElementById(id); if (el) el.remove(); });
@@ -571,47 +572,13 @@
   var art = prosp.querySelector('.pr-art');
   var artImg = art && art.querySelector('img');
 
-  /* The light must gather on the PAINTED pixels, not on the element
-     that holds them. The old version assumed a centred object-fit
-     letterbox — true on some viewports, false on others, and on a wide
-     desktop the image's box was twice its painted height, which put
-     the whole ceremony half an artwork BELOW the logo. This computes
-     the painted box the way the browser does: from the element's own
-     computed object-fit and object-position. No assumptions left. */
-  function paintedRect(box, img) {
-    var nw = img.naturalWidth, nh = img.naturalHeight;
-    if (!nw || !nh || !box.width || !box.height) return null;
-    var cs = getComputedStyle(img);
-    var fit = cs.objectFit || 'fill', w, h, s;
-    if (fit === 'contain' || fit === 'scale-down') {
-      s = Math.min(box.width / nw, box.height / nh);
-      if (fit === 'scale-down') s = Math.min(1, s);
-      w = nw * s; h = nh * s;
-    } else if (fit === 'cover') {
-      s = Math.max(box.width / nw, box.height / nh);
-      w = nw * s; h = nh * s;
-    } else if (fit === 'none') { w = nw; h = nh; }
-    else { w = box.width; h = box.height; }
-    var pos = (cs.objectPosition || '50% 50%').split(/\s+/);
-    function along(p, extent, span) {
-      p = (p || '50%').trim();
-      if (p.slice(-1) === '%')  return (span - extent) * parseFloat(p) / 100;
-      if (/px$/.test(p))        return parseFloat(p);
-      if (p === 'left' || p === 'top')    return 0;
-      if (p === 'right' || p === 'bottom') return span - extent;
-      return (span - extent) / 2;
-    }
-    var ox = along(pos[0], w, box.width);
-    var oy = along(pos[1] || '50%', h, box.height);
-    var l = box.left + ox, t = box.top + oy;
-    return { left: l, top: t, width: w, height: h, right: l + w, bottom: t + h };
-  }
+  
 
   function summonArt() {
     if (!art || !artImg) return;
     var sk = SPARK();
     if (sk) {
-      try { sk.summon(paintedRect(artImg.getBoundingClientRect(), artImg), { dur: 2400, strikes: 10 }); }
+      try { sk.summon(artImg.getBoundingClientRect(), { dur: 2400, strikes: 10 }); }
       catch (e) {}
     }
     setTimeout(function () {
@@ -667,10 +634,14 @@
   function placeCore(x, y) {
     if (CORE_DX === null) measureCore();
     onRail = false;                           // she is on the path again
+    /* nothing else gets a vote while she is on the path: the glide
+       frame is cancelled every pin, and left/top/transform are set at
+       important so no stylesheet — present or future — can move her */
+    if (glide) { cancelAnimationFrame(glide); glide = 0; }
     var nx = x - CORE_DX, ny = y - CORE_DY;
-    orb.style.transform = 'none';
-    orb.style.left = nx.toFixed(1) + 'px';
-    orb.style.top  = ny.toFixed(1) + 'px';
+    orb.style.setProperty('transform', 'none', 'important');
+    orb.style.setProperty('left', nx.toFixed(1) + 'px', 'important');
+    orb.style.setProperty('top',  ny.toFixed(1) + 'px', 'important');
     oX = tX = nx; oY = tY = ny;
     srcX = x; srcY = y;                       // light leaves from the lens itself
   }
@@ -684,9 +655,11 @@
     onRail = true;
     var l = parseFloat(orb.style.left) || 0, t = parseFloat(orb.style.top) || 0;
     orb.style.transition = 'none';
-    orb.style.left = '0px'; orb.style.top = '0px';
+    orb.style.setProperty('left', '0px');
+    orb.style.setProperty('top', '0px');
     oX = tX = l; oY = tY = t;
-    orb.style.transform = 'translate3d(' + oX.toFixed(1) + 'px,' + oY.toFixed(1) + 'px,0)';
+    orb.style.setProperty('transform',
+      'translate3d(' + oX.toFixed(1) + 'px,' + oY.toFixed(1) + 'px,0)');
     orb.offsetWidth;
     orb.style.transition = '';
   }
@@ -699,26 +672,102 @@
      rect already IS the painted area there, and on a desk, where the
      image is object-fit:contain, the contain maths still letterboxes
      it correctly. One formula, right on both. */
+  /* ══ THE CEREMONY LIVES INSIDE THE ARTWORK ══
+     Four rounds of fixed-position mathematics put her everywhere but
+     the logo — containing blocks, scroll, transforms, viewport quirks.
+     So she no longer computes her way to the picture: she JOINS it.
+     For the ceremony the orb is a child of .pr-art, positioned by the
+     image's own layout offsets — offsetLeft and offsetWidth, values
+     that no transform, scroll, or fixed-position rule can distort. */
+  var orbHome = null;
+  function adoptOrb() {
+    if (orbHome !== null) return;
+    orbHome = true;
+    art.style.position = 'relative';
+    var stage = art.querySelector('#orbStage');
+    if (!stage) {
+      stage = document.createElement('div');
+      stage.id = 'orbStage';
+      art.appendChild(stage);
+    }
+    stage.appendChild(orb);
+    orb.style.setProperty('position', 'absolute', 'important');
+  }
+  function returnOrb() {
+    if (orbHome === null) return;
+    orbHome = null;
+    var c = orbCore.getBoundingClientRect();
+    var vx = c.left + c.width / 2, vy = c.top + c.height / 2;
+    document.body.appendChild(orb);
+    orb.style.setProperty('position', 'fixed', 'important');
+    orb.style.removeProperty('left'); orb.style.removeProperty('top');
+    orb.style.left = '0px'; orb.style.top = '0px';
+    if (CORE_DX === null) measureCore();
+    oX = tX = vx - CORE_DX; oY = tY = vy - CORE_DY;
+    orb.style.setProperty('transform',
+      'translate3d(' + oX.toFixed(1) + 'px,' + oY.toFixed(1) + 'px,0)');
+    onRail = true;
+  }
+  /* the mark, in .pr-art's own layout space — pure offsets */
+  function localMark() {
+    if (!artImg || !artImg.naturalWidth) return null;
+    return { x: artImg.offsetLeft + artImg.offsetWidth * 0.21,
+             y: artImg.offsetTop + artImg.offsetHeight * 0.60,
+             w: artImg.offsetWidth, h: artImg.offsetHeight,
+             cx: artImg.offsetLeft + artImg.offsetWidth / 2,
+             cy: artImg.offsetTop + artImg.offsetHeight / 2 };
+  }
+  function placeLocal(x, y) {
+    if (CORE_DX === null) measureCore();
+    onRail = false;
+    orb.style.setProperty('transform', 'none', 'important');
+    orb.style.setProperty('left', (x - CORE_DX).toFixed(1) + 'px', 'important');
+    orb.style.setProperty('top',  (y - CORE_DY).toFixed(1) + 'px', 'important');
+    var c = orbCore.getBoundingClientRect();
+    srcX = c.left + c.width / 2; srcY = c.top + c.height / 2;
+  }
+
   function markPoint() {
     if (!art || !artImg || !artImg.naturalWidth) return null;
     var ib = artImg.getBoundingClientRect();
+    if (/[?&]dbg=1/.test(location.search)) {
+      var d = document.getElementById('mmDbg');
+      if (!d) { d = document.createElement('div'); d.id = 'mmDbg';
+        d.style.cssText = 'position:fixed;left:4px;bottom:4px;z-index:2147483647;color:#0f0;font:12px monospace;background:#000c;padding:4px;pointer-events:none';
+        document.body.appendChild(d); }
+      var ob = orb.getBoundingClientRect();
+      var cb = orbCore.getBoundingClientRect();
+      var ap = art.getBoundingClientRect();
+      d.textContent = JSON.stringify({ib:[Math.round(ib.left),Math.round(ib.top),Math.round(ib.width),Math.round(ib.height)],
+        off:[artImg.offsetLeft,artImg.offsetTop,artImg.offsetWidth,artImg.offsetHeight],
+        artR:[Math.round(ap.left),Math.round(ap.top),Math.round(ap.width),Math.round(ap.height)],
+        op:(orb.offsetParent&&(orb.offsetParent.id||orb.offsetParent.className))||'none',
+        lt:[orb.style.left,orb.style.top],
+        orbR:[Math.round(ob.left),Math.round(ob.top)],
+        coreR:[Math.round(cb.left+cb.width/2),Math.round(cb.top+cb.height/2)],
+        cd:[CORE_DX,CORE_DY]});
+    }
     if (!ib.width || !ib.height) return null;
-    var r = paintedRect(ib, artImg);
-    if (!r) return null;
-    return { x: r.left + r.width * 0.21, y: r.top + r.height * 0.60, art: r };
+    return { x: ib.left + ib.width * 0.21, y: ib.top + ib.height * 0.60,
+             art: { left: ib.left, top: ib.top, width: ib.width, height: ib.height,
+                    right: ib.right, bottom: ib.bottom } };
   }
 
   /* ── SHE PUSHES HERSELF OUT OF THE PICTURE ── */
   function emergeFromArt(done) {
     if (stopped) return done && done();
-    var p = markPoint();
+    var p = markPoint();                 // viewport-space, for the lightning canvas
     if (!p) return done && done();
+    function vMark() { var q = markPoint(); return q || p; }
 
     orb.classList.remove('speaking');
     orbLabel.innerHTML = '';
     orb.style.transition = 'none';            // land on the mark without gliding to it
     CORE_DX = null;                           // the label just changed — remeasure
-    placeCore(p.x, p.y);
+    adoptOrb();
+    var lm = localMark();
+    if (!lm) { returnOrb(); return done && done(); }
+    placeLocal(lm.x, lm.y);
     orb.offsetWidth;
     orb.style.transition = '';
     orb.classList.add('live', 'emerge');
@@ -728,7 +777,7 @@
        tab, and this must survive someone opening the deck in one. */
     later(function () {
       if (stopped) return;
-      placeCore(p.x, p.y);
+      var l2 = localMark(); if (l2) placeLocal(l2.x, l2.y);
       try {
         window.__emergeCheck = {
           mark: [Math.round(p.x), Math.round(p.y)],
@@ -755,10 +804,11 @@
             var reach = 0.30 + Math.random() * 0.34;
             try {
               /* inward: the plate pours itself into the mark */
-              s.arc(p.x + Math.cos(a) * p.art.width * reach,
-                    p.y + Math.sin(a) * p.art.height * reach,
-                    p.x, p.y, { jag: 0.5 });
-              s.emit(p.x, p.y, { n: 5 + n * 2, g: 6 });
+              var vm = vMark();
+              s.arc(vm.x + Math.cos(a) * vm.art.width * reach,
+                    vm.y + Math.sin(a) * vm.art.height * reach,
+                    vm.x, vm.y, { jag: 0.5 });
+              s.emit(vm.x, vm.y, { n: 5 + n * 2, g: 6 });
             } catch (e) {}
           }, 180 + n * 190);
         })(b);
@@ -769,9 +819,10 @@
         if (stopped) return;
         var s = SPARK(); if (!s) return;
         try {
-          s.surge({ x: p.x, y: p.y });
-          s.emit(p.x, p.y, { n: 60, g: 7 });
-          s.summon(p.art, { n: 70, dur: 900, strikes: 5, reach: 0.85 });
+          var vm2 = vMark();
+          s.surge({ x: vm2.x, y: vm2.y });
+          s.emit(vm2.x, vm2.y, { n: 60, g: 7 });
+          s.summon(vm2.art, { n: 70, dur: 900, strikes: 5, reach: 0.85 });
         } catch (e) {}
         try { if (window.MotusSound) { MotusSound.enable(); MotusSound.play('forge'); } } catch (e) {}
       }, 2030);
@@ -780,44 +831,64 @@
       later(function () {
         if (stopped) return;
         var s = SPARK(); if (!s) return;
+        var vm3 = vMark();
         for (var q = 0; q < 5; q++) {
           var a2 = (q / 5) * Math.PI * 2 + 0.4;
           try {
-            s.arc(p.x, p.y,
-                  p.x + Math.cos(a2) * 190,
-                  p.y + Math.sin(a2) * 190, { jag: 0.55 });
+            s.arc(vm3.x, vm3.y,
+                  vm3.x + Math.cos(a2) * 190,
+                  vm3.y + Math.sin(a2) * 190, { jag: 0.55 });
           } catch (e) {}
         }
         try { if (window.MotusSound) MotusSound.play('arrival'); } catch (e) {}
       }, 2380);
     }
 
+    /* PINNED. For the whole emergence she is re-anchored to the live
+       image four times a second — if the page reflows, scrolls, or a
+       late font lands, she rides the artwork instead of drifting off
+       it. Nothing is cached; the DOM is read every beat. */
+    (function pin() {
+      if (stopped || !orb.classList.contains('emerge')) return;
+      var q = localMark();
+      if (q) placeLocal(q.x, q.y);
+      later(pin, 120);
+    })();
+
+    /* she stands ON the logo, full size, for a held beat — the pop-out
+       must be SEEN before the walk begins */
     later(function () {
       if (stopped) return;
       orb.classList.remove('emerge');
-      done && done();
+      later(done, 520);
     }, 3400);
   }
 
   function circleArt(turns, done) {
     if (stopped) return done && done();
-    var p = markPoint();
-    if (!p) return done && done();
-    var r = p.art;
-    var cx = (r.left + r.right) / 2, cy = (r.top + r.bottom) / 2;
+    if (!markPoint()) return done && done();
 
-    /* The radii are chosen so the ENTIRE ellipse is reachable on this
-       screen. Clamping each waypoint instead — which is what happened
-       before — flattens the bottom of the path and the circle appears
-       to stop halfway down the picture. */
-    var cb = orbCore.getBoundingClientRect();
-    var half = (cb.width || 44) / 2, m = 10 + half;
-    var maxRx = Math.min(cx - m, window.innerWidth - m - cx);
-    var maxRy = Math.min(cy - m, window.innerHeight - m - cy);
-    var rx = Math.max(46, Math.min(r.width * 0.52, maxRx));
-    var ry = Math.max(46, Math.min(r.height * 0.52, maxRy));
+    /* The path is derived FRESH on every hop — centre, radii, all of
+       it — from wherever the artwork actually is at that instant. If
+       the page shifts mid-orbit, the orbit shifts with it. The radii
+       are sized so the ENTIRE ellipse is reachable on this screen;
+       clamping waypoints instead is what used to flatten the bottom
+       of the circle. */
+    function frame() {
+      var p = localMark();
+      if (!p) return null;
+      return { p: p, cx: p.cx, cy: p.cy,
+               rx: Math.max(46, p.w * 0.52),
+               ry: Math.max(46, p.h * 0.52) };
+    }
 
     var steps = 30, total = turns * steps, i = 0;
+    /* the walk begins where she stands: the first waypoint of the
+       ellipse is the mark itself, so she peels off the logo instead
+       of teleporting to the top of the path */
+    var f0 = frame(), a0 = -Math.PI / 2;
+    if (f0) { var lm0 = localMark();
+      a0 = Math.atan2((lm0.y - f0.cy) / f0.ry, (lm0.x - f0.cx) / f0.rx); }
     window.__ceremonyAt = Math.round(performance.now());
     ORB_CEREMONY = true;
     if (glide) { cancelAnimationFrame(glide); glide = 0; }   // the path drives, not the easing
@@ -830,19 +901,22 @@
 
     (function hop() {
       if (stopped) { ORB_CEREMONY = false; return; }
-      var a = -Math.PI / 2 + (i / steps) * Math.PI * 2;
-      placeCore(cx + Math.cos(a) * rx, cy + Math.sin(a) * ry);
+      var f = frame();
+      if (!f) { ORB_CEREMONY = false; orb.classList.remove('orbiting'); releaseCore(); return done && done(); }
+      var a = a0 + (i / steps) * Math.PI * 2;
+      placeLocal(f.cx + Math.cos(a) * f.rx, f.cy + Math.sin(a) * f.ry);
 
       var sk = SPARK();
       if (sk) {
+        var vb = artImg.getBoundingClientRect();     // viewport-space, for the canvas
         if (i % 5 === 2) {
           try { sk.arc(srcX, srcY,
-                       r.left + r.width * (0.18 + Math.random() * 0.64),
-                       r.top + r.height * (0.18 + Math.random() * 0.64),
+                       vb.left + vb.width * (0.18 + Math.random() * 0.64),
+                       vb.top + vb.height * (0.18 + Math.random() * 0.64),
                        { jag: 0.42 }); } catch (e) {}
         }
         if (i > 0 && i % steps === 0) {
-          try { sk.summon(r, { n: 44, dur: 700, strikes: 2, reach: 0.5 }); } catch (e) {}
+          try { sk.summon(vb, { n: 44, dur: 700, strikes: 2, reach: 0.5 }); } catch (e) {}
           try { if (window.MotusSound) MotusSound.play('ding'); } catch (e) {}
         }
       }
@@ -851,9 +925,11 @@
       else {
         ORB_CEREMONY = false;
         orb.classList.remove('orbiting');
-        releaseCore();
+        var vb2 = artImg.getBoundingClientRect();
+        returnOrb();                              // home to the body, on the rail
         var s2 = SPARK();
-        if (s2) { try { s2.surge({ x: cx, y: cy }); } catch (e) {} }
+        if (s2) { try { s2.surge({ x: vb2.left + vb2.width / 2,
+                                   y: vb2.top + vb2.height / 2 }); } catch (e) {} }
         later(done, 460);
       }
     })();
