@@ -697,6 +697,7 @@
   function returnOrb() {
     if (orbHome === null) return;
     orbHome = null;
+    orb.classList.remove('armed');
     var c = orbCore.getBoundingClientRect();
     var vx = c.left + c.width / 2, vy = c.top + c.height / 2;
     document.body.appendChild(orb);
@@ -736,6 +737,7 @@
   function placeLocal(x, y) {
     if (CORE_DX === null) measureCore();
     onRail = false;
+    orb.classList.add('armed');               // she has a real position now
     orb.style.setProperty('transform', 'none', 'important');
     orb.style.setProperty('left', (x - CORE_DX).toFixed(1) + 'px', 'important');
     orb.style.setProperty('top',  (y - CORE_DY).toFixed(1) + 'px', 'important');
@@ -785,7 +787,7 @@
     var lm = localMark();
     if (!lm) { art.classList.remove('pr-still'); returnOrb(); return done && done(); }
     placeLocal(lm.x, lm.y);
-    orb.offsetWidth;
+    orb.offsetWidth;                          // commit the position BEFORE she is lit
     orb.style.transition = '';
     orb.classList.add('live', 'emerge');
     /* Re-anchor once the birth class has actually taken effect, so she

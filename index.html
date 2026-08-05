@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="mind-mark.css?v=1785922889" rel="stylesheet">
+<link href="mind-mark.css?v=1785927696" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════════════════
    THE MOTUS VISION · SET THE STAGE · Emergence Glass II
@@ -3822,7 +3822,18 @@ body.rail-open{overflow:hidden}
    stage — never as a grid item, never subject to the artwork's image
    sizing. The stage covers the art exactly; all insets are set, so
    grid alignment has no say in where it goes. */
-#orbStage{position:absolute;inset:0;pointer-events:none;display:block}
+/* THE CAGE.
+   She may not be drawn outside the artwork during the intro. Not by a
+   stale coordinate, not by a mid-flight transition, not by any cause
+   I have not thought of. The stage clips her to the picture, so a
+   wrong position is an INVISIBLE position rather than a flash below
+   the card. Symptom made impossible, whatever the cause. */
+#orbStage{position:absolute;inset:0;pointer-events:none;display:block;
+  overflow:hidden;contain:paint;border-radius:inherit}
+/* and she stays out of sight until she has actually been placed on
+   the mark — `armed` is added only after a successful placement */
+#orbStage #twOrb{visibility:hidden}
+#orbStage #twOrb.armed{visibility:visible}
 /* the artwork holds still while she comes out of it — a breathing
    picture is a moving target, and she was chasing it */
 .pr-art.pr-still img{animation-play-state:paused!important}
@@ -5367,7 +5378,7 @@ html.lite .evHalo{animation:none}
   document.getElementById('orgClose').addEventListener('click', closeOrg);
 })();
 </script>
-<script src="mind-mark.js?v=1785922889" defer></script>
+<script src="mind-mark.js?v=1785927696" defer></script>
 <script>
 (function(){
   'use strict';
@@ -5482,10 +5493,10 @@ html.lite .evHalo{animation:none}
   document.addEventListener('DOMContentLoaded',all);
   all();
 })();</script>
-<script src="sound.js?v=1785922889"></script>
-<script src="spark.js?v=1785922889"></script>
-<script src="prospect.js?v=1785922889" defer></script>
-<script src="finale.js?v=1785922889"></script>
+<script src="sound.js?v=1785927696"></script>
+<script src="spark.js?v=1785927696"></script>
+<script src="prospect.js?v=1785927696" defer></script>
+<script src="finale.js?v=1785927696"></script>
 
 <script id="scoreWire">(function(){
   var S = window.MotusSound; if(!S) return;
