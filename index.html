@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="mind-mark.css?v=1785992919" rel="stylesheet">
+<link href="mind-mark.css?v=1785997642" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════════════════
    THE MOTUS VISION · SET THE STAGE · Emergence Glass II
@@ -3877,6 +3877,28 @@ body.rail-open{overflow:hidden}
   max-width:none!important;max-height:none!important}
 
 /* ═══════════════════════════════════════════════════════════════════
+   03 · THE PROBLEM — TWO CARDS, THE WHOLE SLIDE
+   Surveillance and Control were sized for a slide that carried a third
+   block underneath them. On their own they own the screen, and .92rem
+   body copy in a half-screen card reads as a footnote. Sized against
+   the card itself so both fill it and stay readable on any display.
+   ═══════════════════════════════════════════════════════════════════ */
+#s3 .prob{gap:clamp(14px,2.4vh,28px);margin-top:clamp(10px,2vh,22px)}
+#s3 .prob .card{display:flex;flex-direction:column;justify-content:center;
+  padding:clamp(22px,3vw,44px) clamp(22px,3.2vw,46px)}
+.sl #s3 .prob .card .t,#s3 .prob .card .t{
+  font-size:clamp(1.4rem,2.7vw,2.2rem);letter-spacing:-.01em;
+  margin-bottom:clamp(10px,1.7vh,20px)}
+#s3 .prob .card .t i{font-size:1.15em}
+.sl #s3 .prob .card p,#s3 .prob .card p{
+  font-size:clamp(1.08rem,1.68vw,1.55rem);line-height:1.6;font-weight:400}
+@media (orientation:portrait) and (max-width:900px){
+  .sl #s3 .prob .card .t,#s3 .prob .card .t{font-size:clamp(1.3rem,5.8vw,1.8rem)}
+  .sl #s3 .prob .card p,#s3 .prob .card p{
+    font-size:clamp(1.04rem,4.3vw,1.34rem);line-height:1.55}
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    THE LAST WORD ON THE PHONE FLOOR
    These sit at the end on purpose. Every rule above them is free to
    set a size for a desk; none of them gets to overrule what a person
@@ -4407,7 +4429,7 @@ html.lite .evHalo{animation:none}
     <p class="kick rv">02 · In One Breath</p>
     <h2 class="rv">The coordination economy<b class="brk"> </b><span class="grad">for builders.</span></h2>
     <div class="panel rv" style="--d:.15s">
-      <p class="lead">We pair every builder with an emergent systems intelligence — <b>Davara</b>. We ground them in a shared philosophy and a public build platform — <b>MotusMoves.US</b>. And then we give the community's strongest stories a stage — <b>Motus.Events</b> — where the crowd's own conviction, staked in <b>$VOTUS</b> and <b>$MOTUS</b>, decides who launches next.</p>
+      <p class="lead">We pair every builder with an emergent systems intelligence — <b>Davara</b>. We ground them in a shared philosophy and a public build platform — <b>MotusMoves.US</b>. And then we give some of the community's favorite projects a stage — <b>Motus.Events</b> — a stage unlike any other, where the crowd's own conviction, staked in <b>$VOTUS</b> and <b>$MOTUS</b>, help startups launch with confidence and momentum.</p>
       <p class="lead" style="margin-top:18px"><b>A catalyst. A trust substrate. A base for trust. Build In Public.</b></p>
     </div>
     <div class="panel rv" style="--d:.28s;margin-top:16px;text-align:center">
@@ -4465,9 +4487,6 @@ html.lite .evHalo{animation:none}
         <p class="t"><i>◒</i> Control</p>
         <p>In its current form, AI is the most scalable gatekeeping machine ever built — quietly widening the gap between the elite and the common builder.</p>
       </div>
-    </div>
-    <div class="panel rv" style="--d:.38s;margin-top:18px">
-      <p class="lead">And the same pattern rules who gets to launch: <b>Success To The Successful.</b> AI democratized <b>production</b> — it did not democratize <b>selection</b>. What gets seen, funded, and trusted is still decided by status and capital. <b>We are building the system that changes who gets to win.</b></p>
     </div>
   </div>
 </section>
@@ -4586,11 +4605,14 @@ html.lite .evHalo{animation:none}
 /* the picture moved to its own card — the layers get the whole width */
 </style>
 
-<!-- ═══ 07 · THE SYMPHONY ═══ -->
+<!-- ═══ 07 · THE STORY ═══ -->
 <section class="sl" data-lv="structures" id="s7">
   <div class="in">
-    <p class="kick rv">07 · The Symphony</p>
-    <h2 class="rv">One movement.<b class="brk"> </b><span class="grad">Every instrument.</span></h2>
+    <p class="kick rv">07 · The Story</p>
+    <!-- a deliberate break: left to itself this wrapped "One Mission.
+         Moving" / "Mindsets.", which orphaned a word and pushed the
+         kick line clean off the top of the card -->
+    <h2 class="rv">One Mission.<b class="brk hard"> </b><span class="grad">Moving Mindsets.</span></h2>
     <div class="panel rv" style="--d:.1s">
       <div class="sym">
         <span class="rv" style="--d:.15s">An AI Vibe Coding Platform</span>
@@ -5413,7 +5435,7 @@ html.lite .evHalo{animation:none}
   document.getElementById('orgClose').addEventListener('click', closeOrg);
 })();
 </script>
-<script src="mind-mark.js?v=1785992919" defer></script>
+<script src="mind-mark.js?v=1785997642" defer></script>
 <script>
 (function(){
   'use strict';
@@ -5528,10 +5550,10 @@ html.lite .evHalo{animation:none}
   document.addEventListener('DOMContentLoaded',all);
   all();
 })();</script>
-<script src="sound.js?v=1785992919"></script>
-<script src="spark.js?v=1785992919"></script>
-<script src="prospect.js?v=1785992919" defer></script>
-<script src="finale.js?v=1785992919"></script>
+<script src="sound.js?v=1785997642"></script>
+<script src="spark.js?v=1785997642"></script>
+<script src="prospect.js?v=1785997642" defer></script>
+<script src="finale.js?v=1785997642"></script>
 
 <script id="scoreWire">(function(){
   var S = window.MotusSound; if(!S) return;
@@ -5981,7 +6003,50 @@ html.lite .evHalo{animation:none}
        measures as zero — do not fit it and do NOT stamp it, or it would
        be remembered as done at a size it never actually had */
     if (!card || !card.clientHeight) return;
+
+    /* NEVER MEASURE A CARD THAT IS STILL MOVING.
+       Every slide rides an entrance animation, and that animation is on
+       the card itself — so while it runs, the card's RENDERED box is
+       smaller than its laid-out box (595px against 630px on s7). Fit it
+       in that moment and you fit it to a size it is about to stop
+       having, then stamp the answer and never look again. That is
+       exactly how s7's kick line ended up above the top of its card.
+       So we wait for the entrance to LAND — asked of the animation
+       itself, not guessed at with a timer — and do not stamp until it
+       has. There is a ceiling on the wait so a stalled animation can
+       never leave a slide unmeasured.
+       And if a settle is ALREADY pending, leave it alone. confirmFit
+       barges in the moment a slide is 60% on screen; without this it
+       measured mid-flight anyway and then STAMPED that answer, so the
+       pending settle came back, found the stamp matching, and returned
+       having done nothing. That is what kept s7's kick off its card. */
+    if (sec.__fitWaiting) return;
+
+    if (card.getAnimations &&
+        Math.abs(card.getBoundingClientRect().height - card.clientHeight) > 2) {
+      var run = [];
+      try {
+        run = card.getAnimations().filter(function(a){
+          var tm = a.effect && a.effect.getTiming ? a.effect.getTiming() : null;
+          return a.playState === 'running' && tm && tm.iterations !== Infinity;
+        });
+      } catch (e) {}
+      if (run.length) {
+        sec.__fitWaiting = 1;
+        Promise.race([
+          Promise.all(run.map(function(a){ return a.finished.catch(function(){}); })),
+          new Promise(function(r){ setTimeout(r, 1200); })
+        ]).then(function(){ sec.__fitWaiting = 0; fitSection(sec); });
+        return;
+      }
+    }
     sec.__fitKey = key;
+
+    /* the room a card has depends on how much the header is taking, and
+       the header comes and goes as you read. fitAll() refreshed that
+       before measuring; fitting a single slide has to as well, or the
+       card is sized against a screen that no longer exists. */
+    chrome();
 
     /* a card that IS a picture has no type to fit — measuring it only
        ever squeezed it */
@@ -6063,7 +6128,21 @@ html.lite .evHalo{animation:none}
     document.querySelectorAll('section.sl').forEach(function(s){ fitEye.observe(s); });
 
     var fitCheck = new IntersectionObserver(function(es){
-      for (var i = 0; i < es.length; i++) if (es[i].isIntersecting) confirmFit(es[i].target);
+      for (var i = 0; i < es.length; i++) {
+        if (!es[i].isIntersecting) continue;
+        var sec = es[i].target;
+        confirmFit(sec);
+        /* AND ONCE MORE WHEN THE SLIDE HAS STOPPED MOVING.
+           Every element on a slide reveals on its own delay, out to
+           .78s. A card measured while that is still running is measured
+           at a size it never actually holds — s7 was fitted mid-reveal
+           and stamped, which pushed its kick line clean off the top of
+           the card. One more look, after the slide has settled. */
+        clearTimeout(sec.__fitLate);
+        sec.__fitLate = setTimeout(function(s){
+          return function(){ confirmFit(s); };
+        }(sec), 950);
+      }
     }, { threshold: 0.6 });
     document.querySelectorAll('section.sl').forEach(function(s){ fitCheck.observe(s); });
   } catch (e) {}
