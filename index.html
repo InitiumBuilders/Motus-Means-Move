@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="mind-mark.css?v=1785989948" rel="stylesheet">
+<link href="mind-mark.css?v=1785991711" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════════════════
    THE MOTUS VISION · SET THE STAGE · Emergence Glass II
@@ -3831,8 +3831,37 @@ body.rail-open{overflow:hidden}
    path together — she is still tethered to the picture, so a position
    below the card is still an invisible one, but the ceremony fits.
    No inherited corner radius: rounded corners clip a circle's own. */
+/* ABOVE THE PICTURE, NOT UNDER IT.
+   The artwork's <img> is z-index:1. The stage was z-index:auto, so the
+   picture painted straight over her: she vanished the instant she was
+   on the plate and only reappeared in the sliver beyond its edge. That
+   sliver, between the artwork's edge and the card's, is the "cut off
+   between two invisible lines". */
 #orbStage{position:absolute;inset:0;pointer-events:none;display:block;
-  overflow:hidden;border-radius:0}
+  overflow:hidden;border-radius:0;z-index:9}
+
+/* ══ SHE IS NOT THE ARTWORK ══
+   While she is inside .pr-art, every `.pr-art img` rule in this
+   stylesheet lands on the orb's own lens — the artwork's condense
+   animation (which BEGINS at opacity 0), the artwork's mask, its
+   filter, its 100vw sizing. And `pr-still`, the rule added to hold the
+   picture steady for her, PAUSED that borrowed animation on its first
+   frame: her lens sat at opacity 0 for the whole ceremony. All anyone
+   ever saw was the glow ring around an empty circle — the logo that
+   never generates. She keeps her own values here, at the same weight. */
+.pr-art #twOrb .two-core img{
+  position:static!important;
+  width:100%!important;height:100%!important;
+  max-width:none!important;max-height:none!important;
+  border-radius:50%!important;
+  object-fit:cover!important;object-position:center!important;
+  animation:none!important;
+  opacity:1!important;
+  transform:none!important;
+  will-change:auto!important;
+  -webkit-mask-image:radial-gradient(circle,#000 42%,transparent 74%)!important;
+          mask-image:radial-gradient(circle,#000 42%,transparent 74%)!important;
+  filter:saturate(1.3) brightness(1.15)!important}
 /* she stays out of sight until she has a real position on the mark —
    and the script opens this gate on a timer no matter what happens,
    so "hidden until placed" can never become "hidden all intro" */
@@ -3840,7 +3869,9 @@ body.rail-open{overflow:hidden}
 #orbStage #twOrb.armed{visibility:visible}
 /* the artwork holds still while she comes out of it — a breathing
    picture is a moving target, and she was chasing it */
-.pr-art.pr-still img{animation-play-state:paused!important}
+/* the ARTWORK holds its breath — the direct child only. Written as a
+   descendant this also froze the orb's lens mid-animation. */
+.pr-art.pr-still > img{animation-play-state:paused!important}
 #orbStage #twOrb{position:absolute}
 .pr-art #twOrb .two-core img{width:100%!important;height:100%!important;
   max-width:none!important;max-height:none!important}
@@ -5382,7 +5413,7 @@ html.lite .evHalo{animation:none}
   document.getElementById('orgClose').addEventListener('click', closeOrg);
 })();
 </script>
-<script src="mind-mark.js?v=1785989948" defer></script>
+<script src="mind-mark.js?v=1785991711" defer></script>
 <script>
 (function(){
   'use strict';
@@ -5497,10 +5528,10 @@ html.lite .evHalo{animation:none}
   document.addEventListener('DOMContentLoaded',all);
   all();
 })();</script>
-<script src="sound.js?v=1785989948"></script>
-<script src="spark.js?v=1785989948"></script>
-<script src="prospect.js?v=1785989948" defer></script>
-<script src="finale.js?v=1785989948"></script>
+<script src="sound.js?v=1785991711"></script>
+<script src="spark.js?v=1785991711"></script>
+<script src="prospect.js?v=1785991711" defer></script>
+<script src="finale.js?v=1785991711"></script>
 
 <script id="scoreWire">(function(){
   var S = window.MotusSound; if(!S) return;

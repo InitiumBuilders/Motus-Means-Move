@@ -695,31 +695,14 @@
      path and the room it needs can never drift apart again. */
   var ORBIT_R = 0.52;
 
-  /* THE STAGE IS THE ARTWORK PLUS THE ROOM SHE ACTUALLY NEEDS.
-     A stage clipped to the picture amputated her. On a phone the image
-     is full-bleed, and the walk swings 52% of its width out from the
-     centre — so both sides of every circle, and the bottom, were being
-     cut off by my own cage. That is the "invisible / cut off at the
-     sides" she has been showing.
-     The stage still hangs off the artwork, so a position hundreds of
-     pixels below the card is still an invisible position. It is simply
-     built to fit the path that was designed, with the orb's own radius
-     of margin on top. Measured, not guessed, every time she is adopted. */
-  function sizeStage(stage) {
-    if (!stage || !artImg) return;
-    var ab = art.getBoundingClientRect(), ib = artImg.getBoundingClientRect();
-    if (!ab.width || !ib.width) return;
+  /* HOW MUCH ROOM HER BODY NEEDS AROUND THE PATH.
+     Inflating the stage past the artwork was pointless — .pr-art
+     carries its own overflow:hidden, so it clipped the stage straight
+     back. The path is clamped to the room that genuinely exists
+     instead, which is the only version of this that can't slice her. */
+  function orbPad() {
     var cb = orbCore.getBoundingClientRect();
-    /* her own body at its widest — the birth swells the core to 2.3× —
-       plus a margin, so a sub-pixel drift never shaves her edge */
-    var r = Math.max(cb.width || 58, 58) / 2 + 22;
-    var ix = ib.left - ab.left, iy = ib.top - ab.top;
-    var cx = ix + ib.width / 2,  cy = iy + ib.height / 2;
-    var rx = ib.width * ORBIT_R + r, ry = ib.height * ORBIT_R + r;
-    stage.style.left   = Math.min(0, cx - rx) + 'px';
-    stage.style.top    = Math.min(0, cy - ry) + 'px';
-    stage.style.right  = Math.min(0, ab.width  - (cx + rx)) + 'px';
-    stage.style.bottom = Math.min(0, ab.height - (cy + ry)) + 'px';
+    return Math.max(cb.width || 58, 58) / 2 + 8;
   }
 
   var orbHome = null, homeGuard = 0, armGuard = 0, orbRaf = 0;
@@ -734,7 +717,6 @@
       stage.id = 'orbStage';
       art.appendChild(stage);
     }
-    sizeStage(stage);
     stage.appendChild(orb);
     orb.style.setProperty('position', 'absolute', 'important');
     /* SHE CANNOT BE LOST IN HERE.
@@ -786,14 +768,6 @@
     if (!artImg || !artImg.naturalWidth) return null;
     var stage = art.querySelector('#orbStage');
     if (!stage) return null;
-    /* THE STAGE IS RE-CUT EVERY TIME WE LOOK.
-       Sizing it once at adoption was not enough: the artwork condenses
-       and then breathes forever, so a stage measured at one instant no
-       longer covers the path a second later — and the picture drifting
-       out from under a frozen clip is exactly how she got sliced again.
-       Re-cut first, THEN read the mark, so the numbers always belong to
-       the same frame. Both rects are read here anyway; this is free. */
-    sizeStage(stage);
     var sb = stage.getBoundingClientRect();
     var ib = artImg.getBoundingClientRect();
     if (!ib.width || !ib.height) return null;
@@ -1019,12 +993,26 @@
        are sized so the ENTIRE ellipse is reachable on this screen;
        clamping waypoints instead is what used to flatten the bottom
        of the circle. */
+    /* THE PATH IS CLAMPED TO THE ROOM THAT EXISTS.
+       The ellipse wants 52% of the picture out from its centre, which
+       on most screens runs past the bottom of .pr-art — and .pr-art
+       clips. So the radii are cut down to whatever actually fits, her
+       own body included. She still traces the whole picture; she is
+       just never asked to walk somewhere she cannot be seen. */
     function frame() {
       var p = localMark();
       if (!p) return null;
+      var stage = art.querySelector('#orbStage');
+      var rx = p.w * ORBIT_R, ry = p.h * ORBIT_R;
+      if (stage) {
+        var sb = stage.getBoundingClientRect(), pad = orbPad();
+        if (sb.width && sb.height) {
+          rx = Math.min(rx, Math.min(p.cx, sb.width  - p.cx) - pad);
+          ry = Math.min(ry, Math.min(p.cy, sb.height - p.cy) - pad);
+        }
+      }
       return { p: p, cx: p.cx, cy: p.cy,
-               rx: Math.max(46, p.w * ORBIT_R),
-               ry: Math.max(46, p.h * ORBIT_R) };
+               rx: Math.max(46, rx), ry: Math.max(46, ry) };
     }
 
     /* the walk begins where she stands: the first waypoint of the
