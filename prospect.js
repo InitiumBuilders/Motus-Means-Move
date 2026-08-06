@@ -226,6 +226,9 @@
 
     stopEmission();
     if (glide) { cancelAnimationFrame(glide); glide = 0; }
+    if (orbRaf) { cancelAnimationFrame(orbRaf); orbRaf = 0; }   // the walk lets go too
+    emergeHold = false;
+    if (pinRaf) { cancelAnimationFrame(pinRaf); pinRaf = 0; }
     if (watchdog) { clearInterval(watchdog); watchdog = 0; }
     labelTimers.forEach(clearTimeout); labelTimers = [];
     pendingTicks.forEach(clearTimeout); pendingTicks = [];
@@ -653,6 +656,13 @@
   var onRail = false;
   function releaseCore() {
     if (onRail) return;
+    /* EVERY ROAD BACK TO ORDINARY MOTION RUNS THROUGH HERE — so this is
+       where she comes home. Handing her back to the transform rail while
+       she is still a child of the artwork's stage left her positioned in
+       stage coordinates against viewport-sized numbers, clipped out of
+       existence, for the whole rest of the intro. returnOrb() puts her on
+       exactly the rail this function was going to put her on. */
+    if (orbHome !== null) { returnOrb(); return; }
     onRail = true;
     var l = parseFloat(orb.style.left) || 0, t = parseFloat(orb.style.top) || 0;
     orb.style.transition = 'none';
@@ -680,7 +690,40 @@
      For the ceremony the orb is a child of .pr-art, positioned by the
      image's own layout offsets — offsetLeft and offsetWidth, values
      that no transform, scroll, or fixed-position rule can distort. */
-  var orbHome = null;
+  /* how far out from the artwork's centre the walk swings, as a share
+     of the picture. The stage below is built around this number, so the
+     path and the room it needs can never drift apart again. */
+  var ORBIT_R = 0.52;
+
+  /* THE STAGE IS THE ARTWORK PLUS THE ROOM SHE ACTUALLY NEEDS.
+     A stage clipped to the picture amputated her. On a phone the image
+     is full-bleed, and the walk swings 52% of its width out from the
+     centre — so both sides of every circle, and the bottom, were being
+     cut off by my own cage. That is the "invisible / cut off at the
+     sides" she has been showing.
+     The stage still hangs off the artwork, so a position hundreds of
+     pixels below the card is still an invisible position. It is simply
+     built to fit the path that was designed, with the orb's own radius
+     of margin on top. Measured, not guessed, every time she is adopted. */
+  function sizeStage(stage) {
+    if (!stage || !artImg) return;
+    var ab = art.getBoundingClientRect(), ib = artImg.getBoundingClientRect();
+    if (!ab.width || !ib.width) return;
+    var cb = orbCore.getBoundingClientRect();
+    /* her own body at its widest — the birth swells the core to 2.3× —
+       plus a margin, so a sub-pixel drift never shaves her edge */
+    var r = Math.max(cb.width || 58, 58) / 2 + 22;
+    var ix = ib.left - ab.left, iy = ib.top - ab.top;
+    var cx = ix + ib.width / 2,  cy = iy + ib.height / 2;
+    var rx = ib.width * ORBIT_R + r, ry = ib.height * ORBIT_R + r;
+    stage.style.left   = Math.min(0, cx - rx) + 'px';
+    stage.style.top    = Math.min(0, cy - ry) + 'px';
+    stage.style.right  = Math.min(0, ab.width  - (cx + rx)) + 'px';
+    stage.style.bottom = Math.min(0, ab.height - (cy + ry)) + 'px';
+  }
+
+  var orbHome = null, homeGuard = 0, armGuard = 0, orbRaf = 0;
+  var emergeHold = false, pinRaf = 0;
   function adoptOrb() {
     if (orbHome !== null) return;
     orbHome = true;
@@ -691,12 +734,31 @@
       stage.id = 'orbStage';
       art.appendChild(stage);
     }
+    sizeStage(stage);
     stage.appendChild(orb);
     orb.style.setProperty('position', 'absolute', 'important');
+    /* SHE CANNOT BE LOST IN HERE.
+       The gate below hides her until she has a real position, which is
+       right — but "hidden until placed" becomes "hidden forever" the
+       moment any path skips the placement. So the gate opens itself,
+       and a second timer walks her out of the artwork no matter what
+       happens in between. Invisible-for-the-whole-intro is now a state
+       the code cannot reach. */
+    clearTimeout(armGuard);
+    armGuard = later(function () { orb.classList.add('armed'); }, 400);
+    clearTimeout(homeGuard);
+    homeGuard = later(function () {
+      try { art.classList.remove('pr-still'); } catch (e) {}
+      returnOrb();
+    }, 22000);
   }
   function returnOrb() {
     if (orbHome === null) return;
     orbHome = null;
+    emergeHold = false;
+    if (pinRaf) { cancelAnimationFrame(pinRaf); pinRaf = 0; }
+    clearTimeout(homeGuard); homeGuard = 0;
+    clearTimeout(armGuard);  armGuard = 0;
     orb.classList.remove('armed');
     var c = orbCore.getBoundingClientRect();
     var vx = c.left + c.width / 2, vy = c.top + c.height / 2;
@@ -724,6 +786,14 @@
     if (!artImg || !artImg.naturalWidth) return null;
     var stage = art.querySelector('#orbStage');
     if (!stage) return null;
+    /* THE STAGE IS RE-CUT EVERY TIME WE LOOK.
+       Sizing it once at adoption was not enough: the artwork condenses
+       and then breathes forever, so a stage measured at one instant no
+       longer covers the path a second later — and the picture drifting
+       out from under a frozen clip is exactly how she got sliced again.
+       Re-cut first, THEN read the mark, so the numbers always belong to
+       the same frame. Both rects are read here anyway; this is free. */
+    sizeStage(stage);
     var sb = stage.getBoundingClientRect();
     var ib = artImg.getBoundingClientRect();
     if (!ib.width || !ib.height) return null;
@@ -735,13 +805,45 @@
              cy: ly + ib.height / 2 };
   }
   function placeLocal(x, y) {
+    /* stage coordinates only mean anything while she is IN the stage.
+       The 24s failsafe can take her home mid-walk, and a late waypoint
+       arriving after that would plant a stage-local number on a
+       viewport-positioned element — she'd jump to the corner. */
+    if (orbHome === null) return;
     if (CORE_DX === null) measureCore();
     onRail = false;
     orb.classList.add('armed');               // she has a real position now
     orb.style.setProperty('transform', 'none', 'important');
-    orb.style.setProperty('left', (x - CORE_DX).toFixed(1) + 'px', 'important');
-    orb.style.setProperty('top',  (y - CORE_DY).toFixed(1) + 'px', 'important');
+    var lx = x - CORE_DX, ly = y - CORE_DY;
+    orb.style.setProperty('left', lx.toFixed(1) + 'px', 'important');
+    orb.style.setProperty('top',  ly.toFixed(1) + 'px', 'important');
+
+    /* ── AND THEN SHE CHECKS. ──
+       THIS is the bug that has been putting her under the picture.
+       CORE_DX/DY say where her eye sits inside her own box, and they
+       were measured BEFORE `live` and `emerge` were added — classes
+       that change that box. The offset was stale by 182px, so she was
+       placed that far BELOW the mark: below the artwork. A later step
+       cleared the cache, remeasured, and she snapped up onto the logo.
+       Appears below, then teleports on — exactly what was reported,
+       every time, on every screen.
+       So we no longer trust the number. We put her where we think she
+       goes, ask the browser where her eye actually landed, and close
+       the gap in the same frame — then remember the truth for next
+       time. It self-corrects even if the box changes again mid-flight. */
+    var stage = art.querySelector('#orbStage');
     var c = orbCore.getBoundingClientRect();
+    if (stage && c.width) {
+      var sb = stage.getBoundingClientRect();
+      var dx = x - (c.left + c.width / 2 - sb.left);
+      var dy = y - (c.top + c.height / 2 - sb.top);
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+        CORE_DX -= dx; CORE_DY -= dy;         // learn the real offset
+        orb.style.setProperty('left', (lx + dx).toFixed(1) + 'px', 'important');
+        orb.style.setProperty('top',  (ly + dy).toFixed(1) + 'px', 'important');
+        c = orbCore.getBoundingClientRect();
+      }
+    }
     srcX = c.left + c.width / 2; srcY = c.top + c.height / 2;
   }
 
@@ -786,10 +888,13 @@
     art.classList.add('pr-still');   // the picture holds its breath for her
     var lm = localMark();
     if (!lm) { art.classList.remove('pr-still'); returnOrb(); return done && done(); }
-    placeLocal(lm.x, lm.y);
-    orb.offsetWidth;                          // commit the position BEFORE she is lit
+    /* the classes that change her box go on FIRST, so her eye is
+       measured in the shape she will actually be in — then she is
+       placed, and only a placed orb is ever armed and drawn */
     orb.style.transition = '';
     orb.classList.add('live', 'emerge');
+    orb.offsetWidth;                          // let that layout settle
+    placeLocal(lm.x, lm.y);
     /* Re-anchor once the birth class has actually taken effect, so she
        begins the animation dead on the mark and not near it. A timer,
        not a frame: requestAnimationFrame never fires in a backgrounded
@@ -812,9 +917,14 @@
        out of the mark, the whole picture crackles, and she is loose. */
     var sk = SPARK();
     if (sk) {
-      try { sk.emit(p.x, p.y, { n: 12, g: 6 }); } catch (e) {}
+      var LITE = document.documentElement.classList.contains('lite');
+      try { sk.emit(p.x, p.y, { n: LITE ? 5 : 8, g: 6 }); } catch (e) {}
 
-      for (var b = 0; b < 9; b++) {
+      /* THE GATHERING, KEPT QUIET.
+         Six bolts instead of nine, and the spray behind each one grows
+         gently rather than doubling — the build reads the same, at about
+         a third of the particles it used to throw. */
+      for (var b = 0; b < 6; b++) {
         (function (n) {
           later(function () {
             if (stopped) return;
@@ -826,10 +936,10 @@
               var vm = vMark();
               s.arc(vm.x + Math.cos(a) * vm.art.width * reach,
                     vm.y + Math.sin(a) * vm.art.height * reach,
-                    vm.x, vm.y, { jag: 0.5 });
-              s.emit(vm.x, vm.y, { n: 5 + n * 2, g: 6 });
+                    vm.x, vm.y, { jag: 0.44 });
+              s.emit(vm.x, vm.y, { n: (LITE ? 2 : 3) + n, g: 6 });
             } catch (e) {}
-          }, 180 + n * 190);
+          }, 200 + n * 280);
         })(b);
       }
 
@@ -838,10 +948,14 @@
         if (stopped) return;
         var s = SPARK(); if (!s) return;
         try {
+          /* the break, without the full-screen surge — that one call
+             threw up to 190 particles across the whole viewport for a
+             single beat, and it is the most expensive thing the intro
+             ever did. The plate cracking is the moment; it does not
+             need the entire screen to flash. */
           var vm2 = vMark();
-          s.surge({ x: vm2.x, y: vm2.y });
-          s.emit(vm2.x, vm2.y, { n: 60, g: 7 });
-          s.summon(vm2.art, { n: 70, dur: 900, strikes: 5, reach: 0.85 });
+          s.emit(vm2.x, vm2.y, { n: LITE ? 22 : 34, g: 7 });
+          s.summon(vm2.art, { n: LITE ? 26 : 40, dur: 760, strikes: 2, reach: 0.62 });
         } catch (e) {}
         try { if (window.MotusSound) { MotusSound.enable(); MotusSound.play('forge'); } } catch (e) {}
       }, 2030);
@@ -851,12 +965,12 @@
         if (stopped) return;
         var s = SPARK(); if (!s) return;
         var vm3 = vMark();
-        for (var q = 0; q < 5; q++) {
-          var a2 = (q / 5) * Math.PI * 2 + 0.4;
+        for (var q = 0; q < 4; q++) {
+          var a2 = (q / 4) * Math.PI * 2 + 0.4;
           try {
             s.arc(vm3.x, vm3.y,
-                  vm3.x + Math.cos(a2) * 190,
-                  vm3.y + Math.sin(a2) * 190, { jag: 0.55 });
+                  vm3.x + Math.cos(a2) * 150,
+                  vm3.y + Math.sin(a2) * 150, { jag: 0.5 });
           } catch (e) {}
         }
         try { if (window.MotusSound) MotusSound.play('arrival'); } catch (e) {}
@@ -867,11 +981,20 @@
        image four times a second — if the page reflows, scrolls, or a
        late font lands, she rides the artwork instead of drifting off
        it. Nothing is cached; the DOM is read every beat. */
+    /* PINNED, EVERY FRAME, AND THROUGH THE HELD BEAT.
+       Four times a second was not often enough, and stopping when the
+       `emerge` class came off was worse: removing that class changes her
+       box, which moves her eye inside it — with nothing left running to
+       correct for it she slid two hundred pixels up the screen and sat
+       there until the walk started. She stays pinned to the live image
+       until the walk itself takes over. */
+    emergeHold = true;
     (function pin() {
-      if (stopped || !orb.classList.contains('emerge')) return;
+      if (stopped || orbHome === null || !emergeHold) { pinRaf = 0; return; }
       var q = localMark();
       if (q) placeLocal(q.x, q.y);
-      later(pin, 120);
+      if (document.hidden) { pinRaf = 0; later(pin, 110); }
+      else pinRaf = requestAnimationFrame(pin);
     })();
 
     /* she stands ON the logo, full size, for a held beat — the pop-out
@@ -879,13 +1002,16 @@
     later(function () {
       if (stopped) return;
       orb.classList.remove('emerge');
+      orb.offsetWidth;                        // that class changed her box
+      var q = localMark(); if (q) placeLocal(q.x, q.y);   // so correct it now
       later(done, 520);
     }, 3400);
   }
 
   function circleArt(turns, done) {
     if (stopped) return done && done();
-    if (!markPoint()) return done && done();
+    /* she does not get abandoned inside the artwork on the way out */
+    if (!markPoint()) { art.classList.remove('pr-still'); returnOrb(); return done && done(); }
 
     /* The path is derived FRESH on every hop — centre, radii, all of
        it — from wherever the artwork actually is at that instant. If
@@ -897,11 +1023,10 @@
       var p = localMark();
       if (!p) return null;
       return { p: p, cx: p.cx, cy: p.cy,
-               rx: Math.max(46, p.w * 0.52),
-               ry: Math.max(46, p.h * 0.52) };
+               rx: Math.max(46, p.w * ORBIT_R),
+               ry: Math.max(46, p.h * ORBIT_R) };
     }
 
-    var steps = 30, total = turns * steps, i = 0;
     /* the walk begins where she stands: the first waypoint of the
        ellipse is the mark itself, so she peels off the logo instead
        of teleporting to the top of the path */
@@ -910,6 +1035,8 @@
       a0 = Math.atan2((lm0.y - f0.cy) / f0.ry, (lm0.x - f0.cx) / f0.rx); }
     window.__ceremonyAt = Math.round(performance.now());
     ORB_CEREMONY = true;
+    emergeHold = false;                      // the walk takes over the pinning
+    if (pinRaf) { cancelAnimationFrame(pinRaf); pinRaf = 0; }
     if (glide) { cancelAnimationFrame(glide); glide = 0; }   // the path drives, not the easing
     orb.classList.add('live', 'orbiting');
     labelTimers.forEach(clearTimeout); labelTimers = [];
@@ -918,41 +1045,84 @@
     CORE_DX = null;                          // remeasure against the bare orb
     readSource();
 
-    (function hop() {
-      if (stopped) { ORB_CEREMONY = false; return; }
+    /* ── THE WALK, ON TIME INSTEAD OF ON TICKS ──
+       Thirty stops a turn on a 74ms timer is thirteen frames a second:
+       that is the stutter. She now moves on the display's own frames and
+       takes her angle from the CLOCK, so the circle is smooth on a fast
+       screen, honest on a slow one, and exactly as long either way. If
+       the tab is hidden there are no frames to ride, so she falls back
+       to a coarse timer — cheaper than rendering to nobody. */
+    var TURN = 2600, span = turns * TURN, t0 = null;
+    var LITE = document.documentElement.classList.contains('lite');
+    var lastTrail = 0, lastArc = 0, turnsClosed = 0;
+
+    function finish() {
+      ORB_CEREMONY = false;
+      orbRaf = 0;
+      orb.classList.remove('orbiting');
+      var vb2 = artImg ? artImg.getBoundingClientRect() : null;
+      art.classList.remove('pr-still');          // and it breathes again
+      returnOrb();                               // home to the body, on the rail
+      var s2 = SPARK();
+      if (s2 && vb2) {
+        /* a soft bloom off the plate instead of the old full-screen
+           surge, which threw two hundred particles for one beat */
+        try { s2.emit(vb2.left + vb2.width / 2, vb2.top + vb2.height / 2,
+                      { n: LITE ? 16 : 28, g: 7 }); } catch (e) {}
+      }
+      later(done, 460);
+    }
+
+    function step(now) {
+      if (stopped || orbHome === null) { ORB_CEREMONY = false; orbRaf = 0; return; }
+      if (t0 === null) t0 = now;
+      var el = now - t0;
       var f = frame();
-      if (!f) { ORB_CEREMONY = false; orb.classList.remove('orbiting'); releaseCore(); return done && done(); }
-      var a = a0 + (i / steps) * Math.PI * 2;
+      if (!f) { orbRaf = 0; orb.classList.remove('orbiting'); return finish(); }
+
+      var a = a0 + (el / TURN) * Math.PI * 2;
       placeLocal(f.cx + Math.cos(a) * f.rx, f.cy + Math.sin(a) * f.ry);
 
+      /* ── HER ELECTRICITY, KEPT QUIET ──
+         She trails sparks the whole way round and reaches into the plate
+         now and then. Everything here is on a time budget rather than
+         per-frame, so riding sixty frames a second costs no more light
+         than riding thirteen did — it just looks like one continuous
+         current instead of a strobe. */
       var sk = SPARK();
-      if (sk) {
-        var vb = artImg.getBoundingClientRect();     // viewport-space, for the canvas
-        if (i % 5 === 2) {
-          try { sk.arc(srcX, srcY,
-                       vb.left + vb.width * (0.18 + Math.random() * 0.64),
-                       vb.top + vb.height * (0.18 + Math.random() * 0.64),
-                       { jag: 0.42 }); } catch (e) {}
+      if (sk && artImg) {
+        if (el - lastTrail > (LITE ? 220 : 150)) {
+          lastTrail = el;
+          try { sk.emit(srcX, srcY, { n: LITE ? 1 : 2, g: 6 }); } catch (e) {}
         }
-        if (i > 0 && i % steps === 0) {
-          try { sk.summon(vb, { n: 44, dur: 700, strikes: 2, reach: 0.5 }); } catch (e) {}
+        if (el - lastArc > (LITE ? 900 : 520)) {
+          lastArc = el;
+          var vb = artImg.getBoundingClientRect();
+          try { sk.arc(srcX, srcY,
+                       vb.left + vb.width  * (0.20 + Math.random() * 0.60),
+                       vb.top  + vb.height * (0.20 + Math.random() * 0.60),
+                       { jag: 0.34 }); } catch (e) {}
+        }
+        var closed = Math.floor(el / TURN);
+        if (closed > turnsClosed && closed <= turns) {
+          turnsClosed = closed;
+          try { sk.summon(artImg.getBoundingClientRect(),
+                          { n: LITE ? 14 : 22, dur: 560, strikes: 1, reach: 0.42 }); } catch (e) {}
           try { if (window.MotusSound) MotusSound.play('ding'); } catch (e) {}
         }
       }
-      i++;
-      if (i <= total) later(hop, 74);
-      else {
-        ORB_CEREMONY = false;
-        orb.classList.remove('orbiting');
-        var vb2 = artImg.getBoundingClientRect();
-        art.classList.remove('pr-still');         // and it breathes again
-        returnOrb();                              // home to the body, on the rail
-        var s2 = SPARK();
-        if (s2) { try { s2.surge({ x: vb2.left + vb2.width / 2,
-                                   y: vb2.top + vb2.height / 2 }); } catch (e) {} }
-        later(done, 460);
-      }
-    })();
+
+      if (el >= span) { orbRaf = 0; return finish(); }
+      schedule();
+    }
+
+    function schedule() {
+      /* orbRaf only ever holds a real frame handle — the timer path is
+         registered with later(), which the teardown already sweeps */
+      if (document.hidden) { orbRaf = 0; later(function () { step(performance.now()); }, 110); }
+      else orbRaf = requestAnimationFrame(step);
+    }
+    schedule();
   }
 
   /* ══ ACT I — Davara types the vision ══════════════════════════════ */
@@ -971,6 +1141,11 @@
        be in play and she would type from the wrong place */
     ORB_CEREMONY = false;
     orb.classList.remove('emerge', 'orbiting');
+    /* whichever way we arrived — finished walk, skipped walk, or the
+       24-second failsafe cutting in over a ceremony that ran long —
+       she leaves the artwork before the writing starts */
+    try { art.classList.remove('pr-still'); } catch (e) {}
+    try { returnOrb(); } catch (e) {}
     releaseCore();
     orb.classList.add('live');
     readSource();
@@ -1003,7 +1178,14 @@
     later(startCeremony, 4200);         // and never wait on it forever
   }, FAST ? 200 : 3400);                // after the condense settles — its scale(1.1)
                                         // would inflate every measurement by 5%
-  later(beginTyping, 24000);            // whatever happens, the words arrive
+  /* whatever happens, the words arrive — but a slow phone that is still
+     mid-circle gets one grace period instead of being cut off. This
+     failsafe used to land on top of a running ceremony and take her out
+     of the artwork half way round. */
+  later(function () {
+    if (!stopped && ORB_CEREMONY) { later(beginTyping, 11000); return; }
+    beginTyping();
+  }, 24000);
 
   /* ══ ACT II — August writes the plain truth ═══════════════════════ */
   wireButtons();
