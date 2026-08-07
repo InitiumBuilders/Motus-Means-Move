@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="mind-mark.css?v=1786097883" rel="stylesheet">
+<link href="mind-mark.css?v=1786099070" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════════════════
    THE MOTUS VISION · SET THE STAGE · Emergence Glass II
@@ -1834,21 +1834,40 @@ body.pro-open #deckNum{display:none}
 /* ═════════ THE FOUR OWNERSHIPS · gravity, one at a time ═════════ */
 .owns{display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:clamp(10px,2.6vh,26px);margin-top:clamp(18px,4vh,44px);text-align:center}
+/* ══════════════════════════════════════════════════════════════════
+   THE STANCE IS ALWAYS ON THE SLIDE
+   These four lines used to sit at opacity:0 in their resting state and
+   depend on a class arriving to animate them into existence. If that
+   class was late, or landed on a neighbour, or you simply moved on
+   before the cascade finished, the slide was BLANK — the kick line and
+   nothing else. And the cascade ran 5.6 SECONDS end to end: a quarter
+   second before the first word, three and a half before the last.
+   Nobody stands still that long. That is why the stance kept "not
+   showing".
+   Two changes, and the failure becomes impossible:
+   1. Visible is the RESTING state. The fall is an enhancement layered
+      on top — so the worst case is that they are simply there.
+   2. `.arr` triggers it too. That lands as the slide's edge enters and
+      stays for as long as any part of the slide is on screen, which is
+      far steadier than `.here` (only ever the ONE nearest the centre).
+   The whole stance now lands in under two seconds and still falls,
+   heavy, one line at a time.
+   ══════════════════════════════════════════════════════════════════ */
 .own1{font-family:'Sora',sans-serif;font-weight:800;letter-spacing:-.022em;line-height:1.04;
   font-size:clamp(1.9rem,7.4vw,4.5rem);color:var(--ink);
-  opacity:0;transform:translateY(46px) scale(.94);filter:blur(14px);
+  opacity:1;
   background-image:linear-gradient(100deg,#fff,#dcd3ff 52%,#a78bfa);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
   text-shadow:0 0 70px rgba(139,92,246,.32)}
 .own1.au{background-image:linear-gradient(100deg,var(--gold),var(--ember));
   text-shadow:0 0 80px rgba(255,183,77,.34)}
-/* each line falls in under its own weight — slow, heavy, inevitable */
-.own .in.lit .own1,.sl.here .owns .own1,.owns .own1.rv.on{
-  animation:ownFall 2.05s cubic-bezier(.13,.72,.2,1) both}
-.owns .own1[data-o="0"]{animation-delay:.25s}
-.owns .own1[data-o="1"]{animation-delay:1.35s}
-.owns .own1[data-o="2"]{animation-delay:2.45s}
-.owns .own1[data-o="3"]{animation-delay:3.55s}
+/* each line falls in under its own weight — heavy, but not slow */
+.own .in.lit .own1,.sl.here .owns .own1,.sl.arr .owns .own1,.owns .own1.rv.on{
+  animation:ownFall 1.05s cubic-bezier(.13,.72,.2,1) both}
+.owns .own1[data-o="0"]{animation-delay:.06s}
+.owns .own1[data-o="1"]{animation-delay:.36s}
+.owns .own1[data-o="2"]{animation-delay:.66s}
+.owns .own1[data-o="3"]{animation-delay:.96s}
 @keyframes ownFall{
   0%{opacity:0;transform:translateY(46px) scale(.94);filter:blur(14px)}
   58%{opacity:1;filter:blur(0)}
@@ -5738,7 +5757,7 @@ html.lite .evHalo{animation:none}
   document.getElementById('orgClose').addEventListener('click', closeOrg);
 })();
 </script>
-<script src="mind-mark.js?v=1786097883" defer></script>
+<script src="mind-mark.js?v=1786099070" defer></script>
 <script>
 (function(){
   'use strict';
@@ -5853,10 +5872,10 @@ html.lite .evHalo{animation:none}
   document.addEventListener('DOMContentLoaded',all);
   all();
 })();</script>
-<script src="sound.js?v=1786097883"></script>
-<script src="spark.js?v=1786097883"></script>
-<script src="prospect.js?v=1786097883" defer></script>
-<script src="finale.js?v=1786097883"></script>
+<script src="sound.js?v=1786099070"></script>
+<script src="spark.js?v=1786099070"></script>
+<script src="prospect.js?v=1786099070" defer></script>
+<script src="finale.js?v=1786099070"></script>
 
 <script id="scoreWire">(function(){
   var S = window.MotusSound; if(!S) return;
@@ -6017,10 +6036,24 @@ html.lite .evHalo{animation:none}
       var d = Math.abs((r.top + r.height / 2) - mid);
       if (d < bestD){ bestD = d; best = i; }
     }
-    if (best !== cur){                       // only touch the DOM on a real change
-      if (S[cur]) S[cur].classList.remove('here');
-      cur = best;
-      if (S[cur]) S[cur].classList.add('here');
+    /* ══ `here` IS SET FROM WHAT IS ON SCREEN, NOT FROM A GUESS ══
+       This used to bail out unless `best !== cur` — and go() sets cur
+       ITSELF before scrolling, so by the time measure() ran the two
+       always matched and the guard skipped the whole block. Walking the
+       deck with the arrow keys therefore never moved `here` at all.
+       Most slides did not care: their entrance rides `.arr`. But "The
+       Signal. The Statement." has nothing else — its four ownership
+       lines fall on `.sl.here .owns .own1` and nothing more, so with
+       `here` stuck on some earlier slide they simply never arrived.
+       Own Your Data / AI / Mind / Future stayed at opacity zero and the
+       slide read as empty.
+       So the class is now applied from the measurement itself, every
+       time, however you got here. It still writes only when a slide's
+       state actually changes, so nothing re-animates for free. */
+    cur = best;
+    for (var j = 0; j < S.length; j++){
+      var on = (j === best);
+      if (on !== S[j].classList.contains('here')) S[j].classList.toggle('here', on);
     }
     num.innerHTML = '<b>' + (cur + 1) + '</b> / ' + S.length;
   }
