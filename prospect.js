@@ -866,7 +866,7 @@
        measured in the shape she will actually be in — then she is
        placed, and only a placed orb is ever armed and drawn */
     orb.style.transition = '';
-    orb.classList.add('live', 'emerge');
+    orb.classList.add('live', 'orb-born');
     orb.offsetWidth;                          // let that layout settle
     placeLocal(lm.x, lm.y);
     /* Re-anchor once the birth class has actually taken effect, so she
@@ -975,7 +975,7 @@
        must be SEEN before the walk begins */
     later(function () {
       if (stopped) return;
-      orb.classList.remove('emerge');
+      orb.classList.remove('orb-born');
       orb.offsetWidth;                        // that class changed her box
       var q = localMark(); if (q) placeLocal(q.x, q.y);   // so correct it now
       later(done, 520);
@@ -1128,7 +1128,7 @@
        before the writing starts, or left/top and transform would both
        be in play and she would type from the wrong place */
     ORB_CEREMONY = false;
-    orb.classList.remove('emerge', 'orbiting');
+    orb.classList.remove('orb-born', 'orbiting');
     /* whichever way we arrived — finished walk, skipped walk, or the
        24-second failsafe cutting in over a ceremony that ran long —
        she leaves the artwork before the writing starts */

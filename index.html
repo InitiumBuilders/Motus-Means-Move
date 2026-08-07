@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="mind-mark.css?v=1785997642" rel="stylesheet">
+<link href="mind-mark.css?v=1786093042" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════════════════
    THE MOTUS VISION · SET THE STAGE · Emergence Glass II
@@ -185,7 +185,13 @@ h2{font-size:clamp(1.8rem,6vw,3.2rem);margin-bottom:20px}
 @keyframes haloSpin{to{transform:translateX(-50%) rotate(360deg)}}
 .beam{position:absolute;inset:auto 0 0 0;height:52%;z-index:-1;pointer-events:none;opacity:.8;
   background:radial-gradient(58% 100% at 50% 100%,rgba(139,92,246,.20),rgba(95,223,255,.05) 55%,transparent 78%)}
-/* the start image — shown WHOLE, feathered only at the rim, emerging with energy */
+/* the start image — shown WHOLE, feathered only at the rim, emerging with energy.
+   NOTE: this is a GENERIC class name and it carries !important sizing, an
+   !important mask and an !important animation. The intro orb used to add a
+   class called `emerge` too, and inherited all of it: a 507px-tall box, a
+   radial mask that sliced her left and right ("two invisible walls"), and
+   this animation over her own. Her class is `orb-born` now. Do not reuse
+   the word `emerge` for anything else. */
 .emerge{width:auto!important;max-width:96vw;height:min(56svh,540px);object-fit:contain;margin-top:2svh!important;mix-blend-mode:normal;
   -webkit-mask-image:radial-gradient(68% 62% at 50% 46%,#000 52%,rgba(0,0,0,.55) 76%,transparent 97%)!important;
   mask-image:radial-gradient(68% 62% at 50% 46%,#000 52%,rgba(0,0,0,.55) 76%,transparent 97%)!important;
@@ -1185,16 +1191,16 @@ body[data-lv]{transition:background .8s ease}
    The orb begins at the exact spot the mark occupies inside the art,
    buried and dim, then pushes itself forward out of the plate and into
    the room. Scale and opacity only — the compositor carries all of it. */
-#twOrb.emerge{z-index:99999}
+#twOrb.orb-born{z-index:99999}
 /* she does not fade up from nothing at a half-known place — the birth
    keyframes own her opacity from the first frame, on the mark */
-#twOrb.emerge{opacity:1!important;transition:none!important}
-#twOrb.emerge .two-core{animation:orbBirth 3.4s cubic-bezier(.16,.86,.2,1) both}
-#twOrb.emerge .two-label,#twOrb.orbiting .two-label{opacity:0;transition:opacity .5s ease}
+#twOrb.orb-born{opacity:1!important;transition:none!important}
+#twOrb.orb-born .two-core{animation:orbBirth 3.4s cubic-bezier(.16,.86,.2,1) both}
+#twOrb.orb-born .two-label,#twOrb.orbiting .two-label{opacity:0;transition:opacity .5s ease}
 /* circling, she is a light on a path — the nameplate would swing the
    whole element wide and clip its own orbit at the right edge */
 #twOrb.orbiting{transition:left .1s linear,top .1s linear}
-#twOrb.emerge{transition:none}
+#twOrb.orb-born{transition:none}
 /* She is IN the plate, then she is out of it. A long buried glow, a
    surge as the surface gives, one overshoot past life size, and she
    settles. Scale, opacity and filter only — nothing here reflows. */
@@ -1208,7 +1214,7 @@ body[data-lv]{transition:background .8s ease}
   82%{transform:scale(.94);filter:brightness(1.2)}
   100%{transform:scale(1);opacity:1;filter:none}}
 /* the shockwave it pushes through as it breaks the surface */
-#twOrb.emerge .two-core::after{content:"";position:absolute;left:50%;top:50%;
+#twOrb.orb-born .two-core::after{content:"";position:absolute;left:50%;top:50%;
   width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;
   border:2.5px solid rgba(150,210,255,.95);pointer-events:none;
   box-shadow:0 0 26px rgba(120,190,255,.75),inset 0 0 20px rgba(150,210,255,.5);
@@ -1218,7 +1224,7 @@ body[data-lv]{transition:background .8s ease}
   56%{opacity:1;transform:scale(1.6)}
   100%{opacity:0;transform:scale(9)}}
 /* a second ring, a beat behind — the surface ripples twice */
-#twOrb.emerge .two-core::before{
+#twOrb.orb-born .two-core::before{
   animation:orbBirthGlow 3.4s cubic-bezier(.16,1,.3,1) both!important}
 @keyframes orbBirthGlow{
   0%{opacity:.2;transform:scale(.4)}
@@ -1226,9 +1232,9 @@ body[data-lv]{transition:background .8s ease}
   70%{opacity:.9;transform:scale(1.4)}
   100%{opacity:1;transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){
-  #twOrb.emerge .two-core,
-  #twOrb.emerge .two-core::after,
-  #twOrb.emerge .two-core::before{animation:none}
+  #twOrb.orb-born .two-core,
+  #twOrb.orb-born .two-core::after,
+  #twOrb.orb-born .two-core::before{animation:none}
 }
 .two-core{position:relative;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;
   animation:twBreathe 3.6s ease-in-out infinite}
@@ -5435,7 +5441,7 @@ html.lite .evHalo{animation:none}
   document.getElementById('orgClose').addEventListener('click', closeOrg);
 })();
 </script>
-<script src="mind-mark.js?v=1785997642" defer></script>
+<script src="mind-mark.js?v=1786093042" defer></script>
 <script>
 (function(){
   'use strict';
@@ -5550,10 +5556,10 @@ html.lite .evHalo{animation:none}
   document.addEventListener('DOMContentLoaded',all);
   all();
 })();</script>
-<script src="sound.js?v=1785997642"></script>
-<script src="spark.js?v=1785997642"></script>
-<script src="prospect.js?v=1785997642" defer></script>
-<script src="finale.js?v=1785997642"></script>
+<script src="sound.js?v=1786093042"></script>
+<script src="spark.js?v=1786093042"></script>
+<script src="prospect.js?v=1786093042" defer></script>
+<script src="finale.js?v=1786093042"></script>
 
 <script id="scoreWire">(function(){
   var S = window.MotusSound; if(!S) return;
