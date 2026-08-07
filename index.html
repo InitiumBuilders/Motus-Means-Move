@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="mind-mark.css?v=1786093042" rel="stylesheet">
+<link href="mind-mark.css?v=1786093588" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════════════════
    THE MOTUS VISION · SET THE STAGE · Emergence Glass II
@@ -3934,23 +3934,7 @@ body.rail-open{overflow:hidden}
   #sReturn2 .rcap{font-size:clamp(1rem,4vw,1.18rem);line-height:1.5}
   #sReturn2 .deal b > span{font-size:clamp(.98rem,3.85vw,1.14rem);line-height:1.55}
 
-  /* LET'S MOVE · the two names carry the slide */
-  #s18 .rungs .price .t{font-size:clamp(1.35rem,5.6vw,1.9rem);letter-spacing:.02em}
 }
-
-/* ═══════════════════════════════════════════════════════════════════
-   LET'S MOVE · the tier names are the headline of their own card
-   ═══════════════════════════════════════════════════════════════════ */
-#s18 .rungs .price .t{font-family:'Unbounded','Sora',sans-serif;font-weight:800;
-  font-size:clamp(1.3rem,2.6vw,2.1rem);letter-spacing:-.02em;text-transform:none;
-  line-height:1.05;margin-bottom:clamp(8px,1.4vh,14px);white-space:nowrap;
-  background-image:linear-gradient(100deg,var(--cyan),var(--violet));
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 0 30px rgba(95,223,255,.36))}
-#s18 .rungs .price.hero .t{
-  background-image:linear-gradient(100deg,var(--gold),var(--ember));
-  filter:drop-shadow(0 0 30px rgba(255,196,107,.42))}
-#s18 .rungs .price .n{font-size:clamp(1.9rem,4.4vw,3rem)}
 
 /* ═══════════════════════════════════════════════════════════════════
    THE TERMS · a real list, evenly spaced, nothing crowded
@@ -5020,26 +5004,6 @@ html.lite .evHalo{animation:none}
   </div>
 </section>
 
-<!-- ═══ 18 · THE MOVEMENT LADDER ═══ -->
-<section class="sl" data-lv="values" id="s18">
-  <div class="in wide">
-    <p class="kick rv">The Movement</p>
-    <h2 class="rv">Let&rsquo;s<b class="brk"> </b><span class="grad">MOVE.</span></h2>
-    <div class="grid2 rungs" style="margin-top:clamp(16px,2.8vh,30px)">
-      <div class="card price rv" style="--d:.15s">
-        <p class="t">MotusMovers</p>
-        <p class="n">$33 <i>/ month</i></p>
-        <p class="v">The stewards of the movement. Unlocks the <b>MotusMover badge</b> across all three platforms.</p>
-      </div>
-      <div class="card price hero rv" style="--d:.28s">
-        <p class="t">Motivus Members</p>
-        <p class="n">$100 <i>/ month</i></p>
-        <p class="v">Earned, or claimed up front. <b>Early access, VIP passes, and discounts to Motus.Events.</b></p>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ═══ 19 · MOTIVUS ONE · INVESTORS ═══ -->
 <section class="sl" data-lv="structures" id="s19">
   <div class="in">
@@ -5441,7 +5405,7 @@ html.lite .evHalo{animation:none}
   document.getElementById('orgClose').addEventListener('click', closeOrg);
 })();
 </script>
-<script src="mind-mark.js?v=1786093042" defer></script>
+<script src="mind-mark.js?v=1786093588" defer></script>
 <script>
 (function(){
   'use strict';
@@ -5556,10 +5520,10 @@ html.lite .evHalo{animation:none}
   document.addEventListener('DOMContentLoaded',all);
   all();
 })();</script>
-<script src="sound.js?v=1786093042"></script>
-<script src="spark.js?v=1786093042"></script>
-<script src="prospect.js?v=1786093042" defer></script>
-<script src="finale.js?v=1786093042"></script>
+<script src="sound.js?v=1786093588"></script>
+<script src="spark.js?v=1786093588"></script>
+<script src="prospect.js?v=1786093588" defer></script>
+<script src="finale.js?v=1786093588"></script>
 
 <script id="scoreWire">(function(){
   var S = window.MotusSound; if(!S) return;
@@ -5693,7 +5657,20 @@ html.lite .evHalo{animation:none}
   'use strict';
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  function slides(){ return [].slice.call(document.querySelectorAll('section.sl, #finaleStage')); }
+  /* ══ THE HIDDEN FUTURES ARE NOT PART OF THE WALK ══
+     Two slides live inside #futures, which is display:none until
+     somebody holds MOVE. They were still counted here — so pressing →
+     on "Set The Stage" aimed at a slide that is not rendered. Nothing
+     moved. The next press aimed at the second hidden one. Nothing moved
+     again. The deck read as jammed on 39 with the arrow keys dead, and
+     the counter claimed two slides that were not there.
+     A slide with no box is not somewhere a person can go. When the
+     futures ARE unlocked they get boxes, and they rejoin the walk on
+     their own with no further help. */
+  function slides(){
+    return [].slice.call(document.querySelectorAll('section.sl, #finaleStage'))
+             .filter(function(s){ return s.getClientRects().length > 0; });
+  }
 
   var num = document.createElement('div');
   num.id = 'deckNum';
