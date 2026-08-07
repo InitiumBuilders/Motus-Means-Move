@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="mind-mark.css?v=1786096115" rel="stylesheet">
+<link href="mind-mark.css?v=1786097883" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════════════════
    THE MOTUS VISION · SET THE STAGE · Emergence Glass II
@@ -3194,20 +3194,26 @@ body.head-gone #headHot:hover::after{opacity:1}
    `transform`, and the two no longer fight */
 .sl.endcard .tbl{transform:none!important;translate:-50% -50%}
 
-/* a film is never cropped again */
-/* THE ELEMENT BOX MUST BE THE PICTURE.
-   Earlier rules force the video to 100%x100% of the card and letterbox the
-   picture inside with . The feather mask then lands on the BOX —
-   eating the top of the wordmark while leaving the picture's real left and
-   right edges hard. Sizing the element to its own intrinsic picture puts the
-   feather back on the actual edge, and crops nothing. */
-.d3film video{
-  position:relative!important;inset:auto!important;
-  width:auto!important;height:auto!important;
-  max-width:100%!important;max-height:100%!important;
-  object-fit:contain!important;animation:none!important;
-  background:transparent}
+/* ══════════════════════════════════════════════════════════════════
+   THE FILM FILLS ITS CARD — AND IS CENTRED IN IT
+   This block used to pin the video back to its own intrinsic size
+   (width:auto / height:auto / object-fit:contain, every one !important).
+   A 1280x730 film then sat in a 1408x792 card at the TOP-LEFT corner,
+   with dead space down the right and along the bottom — and nothing
+   centred it, because .d3film is display:block with an absolutely
+   positioned child that this rule had just made position:relative.
+   That is the "placed to the left and up" on desktop.
+   The full-bleed rules above are the design: the video is absolutely
+   inset to the card and carries a gentle two-axis EDGE feather (solid
+   from 10% to 90%), so it fills the frame without a hard border and
+   without touching the wordmark in the middle. They get to win.
+   Do NOT add display:grid / place-items here as a "safety net": an
+   absolutely-inset child of a GRID container gets ALIGNED rather than
+   stretched, and the film collapses to a 60px band across the middle.
+   The abspos inset IS the fill, and the fill IS the centring.
+   ══════════════════════════════════════════════════════════════════ */
 .d3film{background:transparent}
+.d3film video{background:transparent}
 /* the mind-mark creed is bounded by the card, never by its own ch measure */
 #s10 .mm-creed,#s10 .mm-mount{max-width:100%!important;margin-inline:auto}
 
@@ -5732,7 +5738,7 @@ html.lite .evHalo{animation:none}
   document.getElementById('orgClose').addEventListener('click', closeOrg);
 })();
 </script>
-<script src="mind-mark.js?v=1786096115" defer></script>
+<script src="mind-mark.js?v=1786097883" defer></script>
 <script>
 (function(){
   'use strict';
@@ -5847,10 +5853,10 @@ html.lite .evHalo{animation:none}
   document.addEventListener('DOMContentLoaded',all);
   all();
 })();</script>
-<script src="sound.js?v=1786096115"></script>
-<script src="spark.js?v=1786096115"></script>
-<script src="prospect.js?v=1786096115" defer></script>
-<script src="finale.js?v=1786096115"></script>
+<script src="sound.js?v=1786097883"></script>
+<script src="spark.js?v=1786097883"></script>
+<script src="prospect.js?v=1786097883" defer></script>
+<script src="finale.js?v=1786097883"></script>
 
 <script id="scoreWire">(function(){
   var S = window.MotusSound; if(!S) return;
@@ -6301,6 +6307,30 @@ html.lite .evHalo{animation:none}
      for the duration of every fit; nothing needs it off any more,
      because nothing measures a slide that is being skipped. */
   document.documentElement.classList.add('cv-on');
+
+  /* ══ WRAP EVERY CARD NOW, MEASURE IT LATER ══
+     fitOne() wraps a card's children in a .scaler the first time it
+     measures that card — and moving elements in the DOM RESTARTS every
+     CSS animation on them. While the fit was eager that happened at
+     load, long before anyone saw a slide. Lazily, it lands whenever the
+     reader walks up to one — mid-entrance. On "The Signal. The
+     Statement." the four ownership lines fall on a 5.6-second stagger;
+     re-parenting them halfway through sent all four back to opacity 0
+     and started the whole countdown again, so the slide read as empty.
+     Wrapping is pure DOM — it reads no geometry and forces no layout —
+     so it is free to do up front. The measuring stays lazy; only the
+     re-parent moves back to a moment nobody is watching.
+     ONLY the cards that actually get fitted. A picture slide is never
+     measured, so it never had a .scaler — and it must not get one now:
+     the film cards size themselves with height:100% the whole way down,
+     and one extra content-height wrapper in that chain collapsed the
+     entire film to a 59px band. Same test fitSection uses. */
+  document.querySelectorAll('section.sl > .in').forEach(function(card){
+    var sec = card.parentElement;
+    if (sec.classList.contains('cover') || sec.classList.contains('door') ||
+        sec.classList.contains('door3') || sec.classList.contains('bergshot')) return;
+    try { scalerOf(card); } catch (e) {}
+  });
 
   function vpKey(){ return innerWidth + 'x' + innerHeight; }
 
