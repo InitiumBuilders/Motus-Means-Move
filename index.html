@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Unbounded:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link href="mind-mark.css?v=1786099070" rel="stylesheet">
+<link href="mind-mark.css?v=1786163690" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════════════════════════════════
    THE MOTUS VISION · SET THE STAGE · Emergence Glass II
@@ -2726,6 +2726,48 @@ body:not(.pro-open) .rail{display:none}
   border-radius:0}
 
 /* the presence has no transition on transform — it glides on rAF */
+/* ══════════════════════════════════════════════════════════════════
+   THE WAY OUT · offered, never hidden
+   A few seconds into each act she stops saying what she is DOING and
+   says what you can do: double-click and take the whole text at once.
+   Her nameplate is one nowrap line capped at 26ch — it would clip a
+   sentence — so the invitation gets its own shape. It wraps between
+   WORDS (each word keeps its letters in a nowrap shell), it reads at
+   a comfortable size, and it is the one thing on her you can click.
+   `stoppable` stays on for the whole act: the offer is explained once,
+   but it can be taken at any moment.
+   ══════════════════════════════════════════════════════════════════ */
+#twOrb.stoppable{pointer-events:auto;cursor:pointer}
+#twOrb.stoppable .two-core{cursor:pointer}
+/* THE INVITATION PARKS. It is a message to the reader, not a nameplate
+   on a word — so while it is up she stops being dragged around by the
+   typing and sits still, centred, where the whole sentence can be read
+   and aimed at. Chasing the text with a pill this wide ran it off the
+   right edge of a phone no matter how the clamp was tuned. */
+#twOrb.hinting{
+  left:50%!important;top:auto!important;right:auto!important;
+  bottom:clamp(88px,15vh,150px)!important;
+  transform:translateX(-50%)!important;
+  transition:transform .55s cubic-bezier(.16,1,.3,1)!important;
+  z-index:98}
+#twOrb.unpark{transition:transform .6s cubic-bezier(.16,1,.3,1)!important}
+#twOrb.hinting .two-label{
+  max-width:min(38ch,72vw);white-space:normal;overflow:visible;
+  font-size:clamp(.64rem,1.8vw,.78rem);line-height:1.62;letter-spacing:.09em;
+  text-align:left;padding:11px 15px;
+  border-color:rgba(95,223,255,.55);
+  box-shadow:0 0 34px -8px rgba(95,223,255,.55)}
+#twOrb.hinting .lw{white-space:nowrap}
+#twOrb.august.hinting .two-label{
+  border-color:rgba(255,196,107,.55);
+  box-shadow:0 0 34px -8px rgba(255,196,107,.55)}
+/* the act, taken whole — scoped to the act you stopped, so the other
+   one still gets to be written when you open it */
+#prosp.tw-all .tw-block,#prosp.tw-all .tc,
+#reword.tw-all .tw-block,#reword.tw-all .tc{
+  opacity:1!important;animation:none!important;transform:none!important;
+  filter:none!important;text-shadow:none!important}
+
 #twOrb{transition:opacity .8s ease!important;will-change:transform}
 .two-core{animation:twBreathe 5.2s ease-in-out infinite}
 .two-core::after{animation:frameRun 5.6s linear infinite}
@@ -5757,7 +5799,7 @@ html.lite .evHalo{animation:none}
   document.getElementById('orgClose').addEventListener('click', closeOrg);
 })();
 </script>
-<script src="mind-mark.js?v=1786099070" defer></script>
+<script src="mind-mark.js?v=1786163690" defer></script>
 <script>
 (function(){
   'use strict';
@@ -5872,10 +5914,10 @@ html.lite .evHalo{animation:none}
   document.addEventListener('DOMContentLoaded',all);
   all();
 })();</script>
-<script src="sound.js?v=1786099070"></script>
-<script src="spark.js?v=1786099070"></script>
-<script src="prospect.js?v=1786099070" defer></script>
-<script src="finale.js?v=1786099070"></script>
+<script src="sound.js?v=1786163690"></script>
+<script src="spark.js?v=1786163690"></script>
+<script src="prospect.js?v=1786163690" defer></script>
+<script src="finale.js?v=1786163690"></script>
 
 <script id="scoreWire">(function(){
   var S = window.MotusSound; if(!S) return;

@@ -56,25 +56,49 @@
      folds itself away. After that it would only be standing in front
      of the words it came to deliver. */
   var labelTimers = [];
-  function speak(name, hold) {
+  /* opts.wrap  \u2014 a whole sentence, not a nameplate: letters stay bound
+                  into their word, and lines may break between words.
+     opts.dots  \u2014 false for a statement; the trailing "\u2026" belongs to a
+                  thing still in progress, not to an invitation. */
+  function speak(name, hold, opts) {
+    opts = opts || {};
     labelTimers.forEach(clearTimeout); labelTimers = [];
     orb.classList.remove('quiet');
     orb.classList.add('speaking');
     orbLabel.innerHTML = '';
     var frag = document.createDocumentFragment();
     var cells = [];
-    for (var i = 0; i < name.length; i++) {
+    function cell(ch) {
       var c = document.createElement('i');
       c.className = 'lc';
-      c.textContent = name[i] === ' ' ? '\u00a0' : name[i];
-      frag.appendChild(c);
+      c.textContent = ch === ' ' ? '\u00a0' : ch;
       cells.push(c);
+      return c;
     }
-    var dots = document.createElement('b');
-    dots.className = 'two-dots';
-    dots.innerHTML = '<i>.</i><i>.</i><i>.</i>';
-    frag.appendChild(dots);
+    if (opts.wrap) {
+      name.split(' ').forEach(function (word, wi, all) {
+        var shell = document.createElement('span');
+        shell.className = 'lw';
+        for (var k = 0; k < word.length; k++) shell.appendChild(cell(word[k]));
+        frag.appendChild(shell);
+        /* a REAL space between shells \u2014 the only place a line may break */
+        if (wi < all.length - 1) frag.appendChild(document.createTextNode(' '));
+      });
+    } else {
+      for (var i = 0; i < name.length; i++) frag.appendChild(cell(name[i]));
+    }
+    if (opts.dots !== false) {
+      var dots = document.createElement('b');
+      dots.className = 'two-dots';
+      dots.innerHTML = '<i>.</i><i>.</i><i>.</i>';
+      frag.appendChild(dots);
+    }
     orbLabel.appendChild(frag);
+    /* how much room she now needs to stay on screen. The nameplate used
+       to be a known width, so 210px was hard-coded into the clamp — but
+       the invitation is a whole sentence and ran off the right edge of
+       a phone. Measured once per utterance, never per word. */
+    orbW = orb.offsetWidth || 210;
 
     cells.forEach(function (c, i) {
       labelTimers.push(setTimeout(function () {
@@ -114,9 +138,10 @@
      and nothing else is allowed to move it */
   var ORB_CEREMONY = false;
 
+  var orbW = 210;                           // her full width, label included
   function orbTo(rect) {
     if (!rect || ORB_CEREMONY) return;      // the ceremony owns the orb outright
-    tX = Math.min(window.innerWidth - 210, Math.max(12, rect.right + 14));
+    tX = Math.min(window.innerWidth - orbW - 12, Math.max(12, rect.right + 14));
     tY = Math.max(14, rect.top - 74);
     if (!glide) glide = requestAnimationFrame(glideStep);
   }
@@ -279,6 +304,9 @@
 
   function typeSequence(scroller, blocks, opts, onDone) {
     running = true;
+    actRoot = scroller;               // the act that a double-click would finish
+    actBlocks = blocks;
+    freeScroll = false; freeUntil = 0; // a new act follows again until you scroll
     watchdogAt = performance.now();   // a fresh clock for a fresh act
     startEmission();
     var bi = 0, ci = 0, chars = [], total = 0, done = 0, words = 0;
@@ -291,6 +319,12 @@
     // one measurement serves both the orb and the scroll — never two
     function keepInView(sp, rect) {
       var now = performance.now();
+      /* THE READER OWNS THE SCROLL.
+         The moment anyone scrolls by hand, the writing stops dragging
+         the page around — you can go back, go anywhere, read at your
+         own pace. Following resumes only if you sit still for a few
+         seconds, and never yanks you mid-sentence. */
+      if (freeScroll || now < freeUntil) return;
       if (now - lastScroll < S(480)) return;
       var r = rect || sp.getBoundingClientRect();
       var vh = window.innerHeight;
@@ -434,6 +468,89 @@
   }
 
   document.addEventListener('visibilitychange', function () { paused = document.hidden; });
+
+  /* ══════════════════════════════════════════════════════════════════
+     THE WAY OUT · double-click her and take the whole text at once
+     Nobody should have to sit through a performance to read a page.
+     A few seconds into each act she says so herself, and from the
+     moment the writing starts she is clickable — the offer is
+     explained once, but it can be taken whenever.
+     The reveal is scoped to the act you stopped: stop Davara and
+     August still gets to write when you open him.
+     ══════════════════════════════════════════════════════════════════ */
+  var actRoot = null, actBlocks = null, hintTimer = 0;
+  var freeScroll = false, freeUntil = 0;
+
+  function revealAll() {
+    if (stopped || !actRoot) return;
+    if (actRoot.classList.contains('tw-all')) return;   // already whole
+    running = false;
+    stopEmission();
+    clearTimeout(hintTimer);
+    /* she stops being a target — an invisible clickable orb resting
+       over the page would eat clicks meant for the buttons beneath */
+    orb.classList.remove('hinting', 'stoppable');
+    freeScroll = true;                                  // nothing chases you now
+
+    /* every block counts as written, and none of them is still live —
+       that clears the typing shadow as well as the hidden state */
+    if (actBlocks) actBlocks.forEach(function (b) {
+      b.classList.add('tw-block', 'tw-seen');
+      b.classList.remove('tw-live');
+    });
+    actRoot.classList.add('tw-all');
+
+    /* the act is over, so whatever it was gating is now available */
+    if (actRoot === reword) {
+      reword.classList.add('rw-done');
+      forceVisible(['rwMore']);
+    } else {
+      document.body.classList.add('tw-done');
+      forceVisible(['prReword', 'prEnter']);
+    }
+
+    speak('Read At Your Own Pace', 5200, { dots: false });
+    try { var sk = SPARK(); if (sk) sk.emit(srcX, srcY, { n: 18, g: 6 }); } catch (e) {}
+    try { if (window.MotusSound) MotusSound.play('arrival'); } catch (e) {}
+  }
+
+  /* she says it herself, a few seconds in — once per act */
+  function offerTheWayOut(delay) {
+    clearTimeout(hintTimer);
+    hintTimer = later(function () {
+      if (stopped || !running) return;
+      orb.classList.add('hinting');
+      speak('Double Click Here To Stop The Animation And Just Read This Text As Is',
+            14000, { wrap: true, dots: false });
+      /* a beat after she goes quiet, so the label collapses before the
+         hint shape is taken away — otherwise the sentence would snap
+         back to one clipped nowrap line for a frame. `unpark` carries
+         the transition for the trip back to the words, so she glides
+         out of the parked spot instead of jumping. */
+      later(function () {
+        orb.classList.add('unpark');
+        orb.classList.remove('hinting');
+        later(function () { orb.classList.remove('unpark'); }, 700);
+      }, 14300);
+    }, delay || 5200);
+  }
+
+  /* double-click, and double-tap for a thumb */
+  var lastTap = 0;
+  orb.addEventListener('dblclick', function (e) { e.preventDefault(); revealAll(); });
+  orb.addEventListener('click', function () {
+    var n = performance.now();
+    if (n - lastTap < 450) revealAll();
+    lastTap = n;
+  });
+
+  /* any real scrolling gesture hands the page back to the reader */
+  function handItBack() { freeUntil = performance.now() + 6000; }
+  ['wheel', 'touchmove', 'keydown'].forEach(function (evt) {
+    [prosp, reword].forEach(function (el) {
+      if (el) el.addEventListener(evt, handItBack, { passive: true });
+    });
+  });
 
   function forceVisible(ids) {
     ids.forEach(function (id) {
@@ -1138,9 +1255,12 @@
     orb.classList.add('live');
     readSource();
     speak('Davara Is Typing');
+    orb.classList.add('stoppable');     // the way out is open from the first word
+    offerTheWayOut();                   // and she says so a few seconds in
     typeSequence(prosp, prBlocks, { keys: true, ding: false }, function () {
       document.body.classList.add('tw-done');
       orb.classList.add('rest');
+      orb.classList.remove('stoppable', 'hinting');   // no invisible click target
       hidePronto();
       setTimeout(function () { forceVisible(['prReword', 'prEnter']); }, 1900);
       try { if (window.MotusSound) MotusSound.play('arrival'); } catch (e) {}
@@ -1216,9 +1336,12 @@
       setTimeout(function () {
         readSource();
         showPronto();
+        orb.classList.add('stoppable');   // his act can be taken whole too
+        offerTheWayOut();                 // and he offers it, a few seconds in
         typeSequence(reword, blocks, { keys: true, ding: true, august: true }, function () {
           reword.classList.add('rw-done');
           orb.classList.add('rest');
+          orb.classList.remove('stoppable', 'hinting');
           hidePronto();
           setTimeout(function () { forceVisible(['rwMore']); }, 2000);
           try { if (window.MotusSound) MotusSound.play('arrival'); } catch (e) {}
