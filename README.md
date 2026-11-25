@@ -35,6 +35,12 @@ with every URL casing redirecting to the same page.
 After any update here or there: **verify all three casings serve the same
 bytes**, then push the changes back to this repo. This repo is the record.
 
+## License
+
+MIT. See [LICENSE](LICENSE). Copyright (c) 2026 August James Domanchuk.
+
+Forks and pull requests are welcome. Developers and partners can reach us at InitiumBuilders@gmail.com.
+
 ---
 
 Build In Public. Move The Mindset. **Motus Means Move.**
